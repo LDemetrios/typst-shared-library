@@ -45,13 +45,13 @@ macro_rules! function_name {
 #[macro_export]
 macro_rules! tick {
     () => {
-        println!("{}/{}::{}:", file!(), $crate::function_name!(),  line!());
+        // println!("{}/{}::{}:", file!(), $crate::function_name!(),  line!());
     };
     ($msg:expr) => {
-        println!("{}/{}::{}: {}", file!(), $crate::function_name!(), line!(), $msg);
+        // println!("{}/{}::{}: {}", file!(), $crate::function_name!(), line!(), $msg);
     };
     ($fmt:expr, $($args:tt)*) => {
-        println!("{}/{}::{}: {}", file!(), $crate::function_name!(), line!(), format!($fmt, $($args)*));
+        // println!("{}/{}::{}: {}", file!(), $crate::function_name!(), line!(), format!($fmt, $($args)*));
     };
 }
 
