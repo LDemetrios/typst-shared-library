@@ -4,6 +4,8 @@ use std::ops::RangeInclusive;
 use std::str::FromStr;
 
 use comemo::Track;
+use serde::{Serialize, Serializer};
+use serde::ser::SerializeMap;
 use typst_utils::{singleton, NonZeroExt, Scalar};
 
 use crate::diag::{bail, SourceResult};
@@ -963,5 +965,54 @@ mod tests {
     fn test_paged_document_is_send_and_sync() {
         fn ensure_send_and_sync<T: Send + Sync>() {}
         ensure_send_and_sync::<PagedDocument>();
+    }
+}
+
+
+impl Serialize for Margin {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer
+    {
+        let mut map_ser = serializer.serialize_map(Some(4))?;
+
+        map_ser.serialize_entry("top", &self.sides.top)?;
+        map_ser.serialize_entry("bottom", &self.sides.bottom)?;
+        match self.two_sided { // Hope that's right...
+            None | Some(false) => {
+                map_ser.serialize_entry("left", &self.sides.left)?;
+                map_ser.serialize_entry("right", &self.sides.right)?;
+            }
+            Some(true) => {
+                map_ser.serialize_entry("inside", &self.sides.left)?;
+                map_ser.serialize_entry("outside", &self.sides.right)?;
+            }
+        }
+        map_ser.end()
+    }
+}
+
+impl Serialize for Binding {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer
+    {
+        match self {
+            Self::Left => Alignment::LEFT.serialize(serializer),
+            Self::Right => Alignment::RIGHT.serialize(serializer),
+        }
+    }
+}
+
+
+impl Serialize for Parity {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer
+    {
+        match self {
+            Parity::Even => serializer.serialize_str("even"),
+            Parity::Odd => serializer.serialize_str("odd"),
+        }
     }
 }

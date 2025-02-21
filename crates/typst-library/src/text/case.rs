@@ -1,3 +1,5 @@
+use serde::{Serialize, Serializer};
+use typst_utils::tick;
 use crate::foundations::{cast, func, Cast, Content, Str};
 use crate::text::TextElem;
 
@@ -74,6 +76,19 @@ impl Case {
         match self {
             Self::Lower => text.to_lowercase(),
             Self::Upper => text.to_uppercase(),
+        }
+    }
+}
+
+impl Serialize for Case {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer
+    {
+        tick!();
+        match self {
+            Case::Lower => serializer.serialize_str("lower"),
+            Case::Upper => serializer.serialize_str("upper"),
         }
     }
 }

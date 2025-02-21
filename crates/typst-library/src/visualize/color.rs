@@ -9,6 +9,8 @@ use palette::{
     Alpha, Darken, Desaturate, FromColor, Lighten, OklabHue, RgbHue, Saturate, ShiftHue,
 };
 use qcms::Profile;
+use serde::{Serialize, Serializer};
+use serde::ser::SerializeMap;
 use typst_syntax::{Span, Spanned};
 
 use crate::diag::{bail, At, SourceResult, StrResult};
@@ -1967,7 +1969,7 @@ mod tests {
 
     #[test]
     fn test_parse_color_strings() {
-        #[track_caller]
+       //  #[track_caller]
         fn test(hex: &str, r: u8, g: u8, b: u8, a: u8) {
             assert_eq!(Color::from_str(hex), Ok(Color::from_u8(r, g, b, a)));
         }
@@ -1981,7 +1983,7 @@ mod tests {
 
     #[test]
     fn test_parse_invalid_colors() {
-        #[track_caller]
+       //  #[track_caller]
         fn test(hex: &str, message: &str) {
             assert_eq!(Color::from_str(hex), Err(message));
         }
@@ -1991,5 +1993,94 @@ mod tests {
         test("f075ff011", "color string has wrong length");
         test("hmmm", "color string contains non-hexadecimal letters");
         test("14B2AH", "color string contains non-hexadecimal letters");
+    }
+}
+
+
+impl Serialize for Color {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let components = match self {
+            Self::Luma(c) => 1 + if c.alpha != 1.0 { 1 } else { 0 },
+            Self::Oklab(c) => 3 + if c.alpha != 1.0 { 1 } else { 0 },
+            Self::Oklch(c) => 3 + if c.alpha != 1.0 { 1 } else { 0 },
+            Self::Rgb(_) => 1,
+            Self::LinearRgb(c) => 3 + if c.alpha != 1.0 { 1 } else { 0 },
+            Self::Cmyk(_) => 4,
+            Self::Hsl(c) => 3 + if c.alpha != 1.0 { 1 } else { 0 },
+            Self::Hsv(c) => 3 + if c.alpha != 1.0 { 1 } else { 0 },
+        };
+        let mut map_ser = serializer.serialize_map(Some(components + 2))?;
+        map_ser.serialize_entry("type", "color")?;
+        match self {
+            Self::Luma(c) => {
+                map_ser.serialize_entry("func", "luma")?;
+                map_ser.serialize_entry("lightness", &Ratio::new(c.luma.into()))?;
+                if c.alpha != 1.0 {
+                    map_ser.serialize_entry("alpha", &Ratio::new(c.alpha.into()))?;
+                }
+            }
+            Self::Oklab(c) => {
+                map_ser.serialize_entry("func", "oklab")?;
+                map_ser.serialize_entry("lightness", &Ratio::new(c.l.into()))?;
+                map_ser.serialize_entry("a", &c.a)?;
+                map_ser.serialize_entry("b", &c.b)?;
+                if c.alpha != 1.0 {
+                    map_ser.serialize_entry("alpha", &Ratio::new(c.alpha.into()))?;
+                }
+            }
+            Self::Oklch(c) => {
+                map_ser.serialize_entry("func", "oklch")?;
+                map_ser.serialize_entry("lightness", &Ratio::new(c.l.into()))?;
+                map_ser.serialize_entry("chroma", &c.chroma)?;
+                map_ser.serialize_entry("hue", &hue_angle(c.hue.into_degrees()))?;
+                if c.alpha != 1.0 {
+                    map_ser.serialize_entry("alpha", &Ratio::new(c.alpha.into()))?;
+                }
+            }
+            Self::Rgb(_) => {
+                map_ser.serialize_entry("func", "rgb")?;
+                map_ser.serialize_entry("hex", &self.to_hex())?;
+            }
+            Self::LinearRgb(c) => {
+                map_ser.serialize_entry("func", "linear-rgb")?;
+                map_ser.serialize_entry("red", &Ratio::new(c.red.into()))?;
+                map_ser.serialize_entry("green", &Ratio::new(c.green.into()))?;
+                map_ser.serialize_entry("blue", &Ratio::new(c.blue.into()))?;
+                if c.alpha != 1.0 {
+                    map_ser.serialize_entry("alpha", &Ratio::new(c.alpha.into()))?;
+                }
+            }
+            Self::Cmyk(c) => {
+                map_ser.serialize_entry("func", "cmyk")?;
+                map_ser.serialize_entry("cyan", &Ratio::new(c.c.into()))?;
+                map_ser.serialize_entry("magenta", &Ratio::new(c.m.into()))?;
+                map_ser.serialize_entry("yellow", &Ratio::new(c.y.into()))?;
+                map_ser.serialize_entry("key", &Ratio::new(c.k.into()))?;
+            }
+            Self::Hsl(c) => {
+                map_ser.serialize_entry("func", "hsl")?;
+                map_ser.serialize_entry("hue", &hue_angle(c.hue.into_degrees()))?;
+                map_ser
+                    .serialize_entry("saturation", &Ratio::new(c.saturation.into()))?;
+                map_ser.serialize_entry("lightness", &Ratio::new(c.lightness.into()))?;
+                if c.alpha != 1.0 {
+                    map_ser.serialize_entry("alpha", &Ratio::new(c.alpha.into()))?;
+                }
+            }
+            Self::Hsv(c) => {
+                map_ser.serialize_entry("func", "hsv")?;
+                map_ser.serialize_entry("hue", &hue_angle(c.hue.into_degrees()))?;
+                map_ser
+                    .serialize_entry("saturation", &Ratio::new(c.saturation.into()))?;
+                map_ser.serialize_entry("value", &Ratio::new(c.value.into()))?;
+                if c.alpha != 1.0 {
+                    map_ser.serialize_entry("alpha", &Ratio::new(c.alpha.into()))?;
+                }
+            }
+        };
+        map_ser.end()
     }
 }

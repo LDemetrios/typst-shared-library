@@ -1,5 +1,5 @@
 use comemo::Tracked;
-
+use serde::{Serialize, Serializer};
 use crate::diag::HintedStrResult;
 use crate::foundations::{elem, func, Cast, Context};
 
@@ -11,6 +11,18 @@ pub enum Target {
     Paged,
     /// The target that is used for HTML export.
     Html,
+}
+
+impl Serialize for Target {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer
+    {
+        match self {
+            Target::Paged => serializer.serialize_str("paged"),
+            Target::Html => serializer.serialize_str("html"),
+        }
+    }
 }
 
 impl Target {

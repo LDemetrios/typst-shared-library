@@ -23,15 +23,37 @@ pub use self::scalar::Scalar;
 #[doc(hidden)]
 pub use once_cell;
 
+use serde::{Serialize, Serializer};
+use siphasher::sip128::{Hasher128, SipHasher13};
 use std::fmt::{Debug, Formatter};
 use std::hash::Hash;
 use std::iter::{Chain, Flatten, Rev};
 use std::num::NonZeroUsize;
 use std::ops::{Add, Deref, Div, Mul, Neg, Sub};
 use std::sync::Arc;
-
-use siphasher::sip128::{Hasher128, SipHasher13};
 use unicode_math_class::MathClass;
+
+#[macro_export]
+macro_rules! function_name {
+    () => {{
+        fn f() {}
+        let name = std::any::type_name_of_val(&f);
+        &name[..name.len() - 3] // Remove trailing "::f"
+    }};
+}
+
+#[macro_export]
+macro_rules! tick {
+    () => {
+        println!("{}/{}::{}:", file!(), $crate::function_name!(),  line!());
+    };
+    ($msg:expr) => {
+        println!("{}/{}::{}: {}", file!(), $crate::function_name!(), line!(), $msg);
+    };
+    ($fmt:expr, $($args:tt)*) => {
+        println!("{}/{}::{}: {}", file!(), $crate::function_name!(), line!(), format!($fmt, $($args)*));
+    };
+}
 
 /// Turn a closure into a struct implementing [`Debug`].
 pub fn debug<F>(f: F) -> impl Debug
@@ -361,5 +383,15 @@ pub fn default_math_class(c: char) -> Option<MathClass> {
         '\u{22A5}' => Some(MathClass::Normal),
 
         c => unicode_math_class::class(c),
+    }
+}
+
+impl<T: Serialize> Serialize for Static<T> {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        tick!();
+        self.0.serialize(serializer)
     }
 }

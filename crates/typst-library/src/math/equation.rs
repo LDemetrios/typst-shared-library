@@ -1,7 +1,6 @@
+use serde::{Serialize, Serializer};
 use std::num::NonZeroUsize;
-
-use typst_utils::NonZeroExt;
-use unicode_math_class::MathClass;
+use typst_utils::{tick, NonZeroExt};
 
 use crate::diag::SourceResult;
 use crate::engine::Engine;
@@ -136,7 +135,7 @@ pub struct EquationElem {
     /// A forced class to use for all fragment.
     #[internal]
     #[ghost]
-    pub class: Option<MathClass>,
+    pub class: Option<TypstMC>,
 
     /// Values of `scriptPercentScaleDown` and `scriptScriptPercentScaleDown`
     /// respectively in the current font's MathConstants table.
@@ -246,5 +245,37 @@ impl Outlinable for Packed<EquationElem> {
 
     fn body(&self) -> Content {
         Content::empty()
+    }
+}
+
+
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
+pub struct TypstMC(pub unicode_math_class::MathClass);
+
+impl Serialize for TypstMC {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer
+    {
+        tick!();
+
+        let result = match self.0 {
+            unicode_math_class::MathClass::Normal => serializer.serialize_str("normal"),
+            unicode_math_class::MathClass::Alphabetic => serializer.serialize_str("alphabetic"),
+            unicode_math_class::MathClass::Binary => serializer.serialize_str("binary"),
+            unicode_math_class::MathClass::Closing => serializer.serialize_str("closing"),
+            unicode_math_class::MathClass::Diacritic => serializer.serialize_str("diacritic"),
+            unicode_math_class::MathClass::Fence => serializer.serialize_str("fence"),
+            unicode_math_class::MathClass::GlyphPart => serializer.serialize_str("glyph-part"),
+            unicode_math_class::MathClass::Large => serializer.serialize_str("large"),
+            unicode_math_class::MathClass::Opening => serializer.serialize_str("opening"),
+            unicode_math_class::MathClass::Punctuation => serializer.serialize_str("punctuation"),
+            unicode_math_class::MathClass::Relation => serializer.serialize_str("relation"),
+            unicode_math_class::MathClass::Space => serializer.serialize_str("space"),
+            unicode_math_class::MathClass::Unary => serializer.serialize_str("unary"),
+            unicode_math_class::MathClass::Vary => serializer.serialize_str("vary"),
+            unicode_math_class::MathClass::Special => serializer.serialize_str("special"),
+        };
+        tick!(); result
     }
 }

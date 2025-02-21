@@ -1,14 +1,12 @@
 use comemo::{Track, Tracked, TrackedMut};
 use ecow::{eco_format, eco_vec, EcoString, EcoVec};
+use serde::{Serialize, Serializer};
+use serde::ser::SerializeMap;
 use typst_syntax::Span;
 
 use crate::diag::{bail, At, SourceResult};
 use crate::engine::{Engine, Route, Sink, Traced};
-use crate::foundations::{
-    cast, elem, func, scope, select_where, ty, Args, Construct, Content, Context, Func,
-    LocatableSelector, NativeElement, Packed, Repr, Selector, Show, Str, StyleChain,
-    Value,
-};
+use crate::foundations::{cast, elem, func, scope, select_where, ty, Args, Construct, Content, Context, Func, IntoValue, LocatableSelector, NativeElement, Packed, Repr, Selector, Show, Str, StyleChain, Value};
 use crate::introspection::{Introspector, Locatable, Location};
 use crate::routines::Routines;
 use crate::World;
@@ -222,7 +220,7 @@ impl State {
     }
 
     /// Memoized implementation of `sequence`.
-    #[comemo::memoize]
+    // #[comemo::memoize]
     fn sequence_impl(
         &self,
         routines: &Routines,
@@ -380,7 +378,7 @@ struct StateUpdateElem {
 
     /// The update to perform on the state.
     #[required]
-    #[internal]
+    // #[internal]
     update: StateUpdate,
 }
 
@@ -393,5 +391,40 @@ impl Construct for StateUpdateElem {
 impl Show for Packed<StateUpdateElem> {
     fn show(&self, _: &mut Engine, _: StyleChain) -> SourceResult<Content> {
         Ok(Content::empty())
+    }
+}
+
+impl Serialize for State {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut map_ser = serializer.serialize_map(Some(3))?;
+        map_ser.serialize_entry("type", "state")?;
+        map_ser.serialize_entry("key", &self.key)?;
+        map_ser.serialize_entry("init", &self.init)?;
+        map_ser.end()
+    }
+}
+
+
+impl Serialize for StateUpdate {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer
+    {
+        match &self {
+            StateUpdate::Set(v) => v.serialize(serializer),
+            StateUpdate::Func(v) => v.serialize(serializer),
+        }
+    }
+}
+
+impl IntoValue for StateUpdate {
+    fn into_value(self) -> Value {
+        match self {
+            StateUpdate::Set(v) => v,
+            StateUpdate::Func(v) => v.into_value()
+        }
     }
 }

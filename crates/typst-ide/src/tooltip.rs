@@ -295,26 +295,26 @@ mod tests {
     }
 
     impl ResponseExt for Response {
-        #[track_caller]
+       //  #[track_caller]
         fn must_be_none(&self) -> &Self {
             assert_eq!(*self, None);
             self
         }
 
-        #[track_caller]
+       //  #[track_caller]
         fn must_be_text(&self, text: &str) -> &Self {
             assert_eq!(*self, Some(Tooltip::Text(text.into())));
             self
         }
 
-        #[track_caller]
+       //  #[track_caller]
         fn must_be_code(&self, code: &str) -> &Self {
             assert_eq!(*self, Some(Tooltip::Code(code.into())));
             self
         }
     }
 
-    #[track_caller]
+   //  #[track_caller]
     fn test(world: impl WorldLike, pos: impl FilePos, side: Side) -> Response {
         let world = world.acquire();
         let world = world.borrow();
@@ -333,7 +333,7 @@ mod tests {
 
     #[test]
     fn test_tooltip_empty_contextual() {
-        test("#{context}", -1, Side::Before).must_be_code("context()");
+        test("#{context}", -1, Side::Before).must_be_code("context(func: (..) => ..)");
     }
 
     #[test]

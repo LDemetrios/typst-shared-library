@@ -157,7 +157,7 @@ impl Eval for ast::Closure<'_> {
 }
 
 /// Call the function in the context with the arguments.
-#[comemo::memoize]
+// #[comemo::memoize]
 #[allow(clippy::too_many_arguments)]
 pub fn eval_closure(
     func: &Func,
@@ -607,7 +607,7 @@ mod tests {
 
     use super::*;
 
-    #[track_caller]
+   //  #[track_caller]
     fn test(scopes: &Scopes, text: &str, result: &[&str]) {
         let mut visitor = CapturesVisitor::new(Some(scopes), Capturer::Function);
         let root = parse(text);

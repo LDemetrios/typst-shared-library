@@ -42,7 +42,7 @@ impl SyntaxNode {
     /// Create a dummy node of the given kind.
     ///
     /// Panics if `kind` is `SyntaxKind::Error`.
-    #[track_caller]
+   //  #[track_caller]
     pub const fn placeholder(kind: SyntaxKind) -> Self {
         if matches!(kind, SyntaxKind::Error) {
             panic!("cannot create error placeholder");
@@ -116,6 +116,17 @@ impl SyntaxNode {
         match &self.0 {
             Repr::Leaf(_) | Repr::Error(_) => [].iter(),
             Repr::Inner(inner) => inner.children.iter(),
+        }
+    }
+
+
+    pub fn to_text_ref(&self) -> EcoString {
+        match &self.0 {
+            Repr::Leaf(leaf) => leaf.text.clone(),
+            Repr::Inner(inner) => {
+                inner.children.iter().cloned().map(Self::into_text).collect()
+            }
+            Repr::Error(node) => node.text.clone(),
         }
     }
 
@@ -195,7 +206,7 @@ impl SyntaxNode {
     /// Convert the child to another kind.
     ///
     /// Don't use this for converting to an error!
-    #[track_caller]
+   //  #[track_caller]
     pub(super) fn convert_to_kind(&mut self, kind: SyntaxKind) {
         debug_assert!(!kind.is_error());
         match &mut self.0 {
@@ -344,7 +355,7 @@ struct LeafNode {
 
 impl LeafNode {
     /// Create a new leaf node.
-    #[track_caller]
+   //  #[track_caller]
     fn new(kind: SyntaxKind, text: impl Into<EcoString>) -> Self {
         debug_assert!(!kind.is_error());
         Self { kind, text: text.into(), span: Span::detached() }
@@ -389,7 +400,7 @@ struct InnerNode {
 
 impl InnerNode {
     /// Create a new inner node with the given kind and children.
-    #[track_caller]
+   //  #[track_caller]
     fn new(kind: SyntaxKind, children: Vec<SyntaxNode>) -> Self {
         debug_assert!(!kind.is_error());
 

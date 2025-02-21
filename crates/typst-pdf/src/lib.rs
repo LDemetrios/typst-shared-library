@@ -588,7 +588,7 @@ fn deflate(data: &[u8]) -> Vec<u8> {
 
 /// Memoized and deferred version of [`deflate`] specialized for a page's content
 /// stream.
-#[comemo::memoize]
+// #[comemo::memoize]
 fn deflate_deferred(content: Vec<u8>) -> Deferred<Vec<u8>> {
     Deferred::new(move || deflate(&content))
 }

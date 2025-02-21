@@ -211,7 +211,7 @@ impl LibraryBuilder {
 ///
 /// Can be collected from an iterator of [`Feature`]s.
 #[derive(Debug, Default, Clone, Hash)]
-pub struct Features(SmallBitSet);
+pub struct Features(pub SmallBitSet);
 
 impl Features {
     /// Check whether the given feature is enabled.
@@ -221,7 +221,7 @@ impl Features {
 }
 
 impl FromIterator<Feature> for Features {
-    fn from_iter<T: IntoIterator<Item = Feature>>(iter: T) -> Self {
+    fn from_iter<T: IntoIterator<Item=Feature>>(iter: T) -> Self {
         let mut set = SmallBitSet::default();
         for feature in iter {
             set.insert(feature as usize);

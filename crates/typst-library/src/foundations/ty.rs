@@ -6,6 +6,8 @@ use std::fmt::{self, Debug, Display, Formatter};
 use std::sync::LazyLock;
 
 use ecow::{eco_format, EcoString};
+use serde::ser::SerializeMap;
+use serde::Serialize;
 use typst_utils::Static;
 
 use crate::diag::{bail, DeprecationSink, StrResult};
@@ -209,4 +211,17 @@ impl From<&'static NativeTypeData> for Type {
 cast! {
     &'static NativeTypeData,
     self => Type::from(self).into_value(),
+}
+
+
+impl Serialize for Type {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        let mut map_ser = serializer.serialize_map(Some(2))?;
+        map_ser.serialize_entry("type", "type")?;
+        map_ser.serialize_entry("name", self.short_name())?;
+        map_ser.end()
+    }
 }

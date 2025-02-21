@@ -1,14 +1,12 @@
 use std::str::FromStr;
 
 use ecow::eco_format;
+use serde::{Serialize, Serializer};
 use smallvec::SmallVec;
 
 use crate::diag::{bail, SourceResult};
 use crate::engine::Engine;
-use crate::foundations::{
-    cast, elem, scope, Array, Content, NativeElement, Packed, Show, Smart, StyleChain,
-    Styles, TargetElem,
-};
+use crate::foundations::{cast, elem, scope, Array, Content, Fold, NativeElement, Packed, Show, Smart, StyleChain, Styles, TargetElem};
 use crate::html::{attr, tag, HtmlElem};
 use crate::layout::{Alignment, BlockElem, Em, HAlignment, Length, VAlignment, VElem};
 use crate::model::{
@@ -217,7 +215,19 @@ pub struct EnumElem {
     #[internal]
     #[fold]
     #[ghost]
-    pub parents: SmallVec<[usize; 4]>,
+    pub parents: EnumParents,// EnumParents,
+}
+
+#[derive(Clone, Default, Debug, Hash)]
+pub struct EnumParents(pub SmallVec<[usize; 4]>);
+
+impl Serialize for EnumParents {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer
+    {
+        self.0.serialize(serializer)
+    }
 }
 
 #[scope]
@@ -308,3 +318,23 @@ impl ListItemLike for EnumItem {
         item
     }
 }
+
+
+impl Fold for EnumParents {
+    fn fold(self, outer: Self) -> Self {
+        EnumParents(self.0.fold(outer.0))
+    }
+}
+//
+// impl Serialize for EnumParents {
+//     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+//     where
+//         S: Serializer
+//     {
+//         let mut arr_ser = serializer.serialize_seq(Some(self.0.len()))?;
+//         for el in &self.0 {
+//             arr_ser.serialize_element(el)?;
+//         }
+//         arr_ser.end()
+//     }
+// }

@@ -314,12 +314,12 @@ impl<'a> ShapedText<'a> {
             };
 
             let width = item.width();
-            if decos.is_empty() {
+            if decos.0.is_empty() {
                 frame.push(pos, FrameItem::Text(item));
             } else {
                 // Apply line decorations.
                 frame.push(pos, FrameItem::Text(item.clone()));
-                for deco in &decos {
+                for deco in &decos.0 {
                     decorate(&mut frame, deco, &item, width, shift, pos);
                 }
             }
@@ -903,7 +903,7 @@ fn shape_segment<'a>(
 }
 
 /// Create a shape plan.
-#[comemo::memoize]
+// #[comemo::memoize]
 fn create_shape_plan(
     font: &Font,
     direction: rustybuzz::Direction,

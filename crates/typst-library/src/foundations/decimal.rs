@@ -5,6 +5,8 @@ use std::str::FromStr;
 
 use ecow::{eco_format, EcoString};
 use rust_decimal::MathematicalOps;
+use serde::{Serialize, Serializer};
+use serde::ser::SerializeMap;
 use typst_syntax::{ast, Span, Spanned};
 
 use crate::diag::{warning, At, SourceResult};
@@ -473,7 +475,7 @@ mod tests {
         assert_ne!(hash128(&a), hash128(&b));
     }
 
-    #[track_caller]
+   //  #[track_caller]
     fn test_round(value: &str, digits: i32, expected: &str) {
         assert_eq!(
             Decimal::from_str(value).unwrap().round(digits),
@@ -500,5 +502,17 @@ mod tests {
         test_round("4596.55553", -28, "0");
         test_round("-4596.55553", -2341, "0");
         assert_eq!(Decimal::MAX.round(-1), None);
+    }
+}
+
+impl Serialize for Decimal {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut map_ser = serializer.serialize_map(Some(2))?;
+        map_ser.serialize_entry("type", "decimal")?;
+        map_ser.serialize_entry("value", eco_format!("{}", self.0).as_ref())?;
+        map_ser.end()
     }
 }

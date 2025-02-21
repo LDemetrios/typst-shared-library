@@ -1,7 +1,7 @@
 use std::any::Any;
 use std::fmt::{self, Debug, Formatter};
 use std::ops::{BitAnd, BitAndAssign, BitOr, BitOrAssign, Deref, Not};
-
+use serde::{Serialize, Serializer};
 use typst_utils::Get;
 
 use crate::diag::bail;
@@ -316,5 +316,15 @@ impl<T: Resolve> Resolve for Axes<T> {
 
     fn resolve(self, styles: StyleChain) -> Self::Output {
         self.map(|v| v.resolve(styles))
+    }
+}
+
+
+impl<T: Serialize> Serialize for Axes<T> {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        serializer.collect_seq(&[&self.x, &self.y])
     }
 }

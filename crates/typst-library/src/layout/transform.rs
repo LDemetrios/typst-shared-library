@@ -1,3 +1,4 @@
+use serde::{Serialize, Serializer};
 use crate::diag::SourceResult;
 use crate::engine::Engine;
 use crate::foundations::{
@@ -404,5 +405,17 @@ impl Transform {
 impl Default for Transform {
     fn default() -> Self {
         Self::identity()
+    }
+}
+
+impl Serialize for ScaleAmount {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer
+    {
+        match self {
+            ScaleAmount::Ratio(v) => v.serialize(serializer),
+            ScaleAmount::Length(v) => v.serialize(serializer),
+        }
     }
 }

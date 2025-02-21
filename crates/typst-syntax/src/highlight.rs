@@ -421,7 +421,7 @@ mod tests {
     fn test_highlighting() {
         use Tag::*;
 
-        #[track_caller]
+       //  #[track_caller]
         fn test(text: &str, goal: &[(Range<usize>, Tag)]) {
             let mut vec = vec![];
             let root = crate::parse(text);

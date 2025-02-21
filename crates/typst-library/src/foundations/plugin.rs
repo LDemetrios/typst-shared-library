@@ -3,6 +3,7 @@ use std::hash::{Hash, Hasher};
 use std::sync::{Arc, Mutex};
 
 use ecow::{eco_format, EcoString};
+use serde::{Serialize, Serializer};
 use typst_syntax::Spanned;
 use wasmi::Memory;
 
@@ -216,15 +217,20 @@ impl PluginFunc {
         &self.name
     }
 
+    /// The name of the plugin function.
+    pub fn plugin(&self) -> &Arc<Plugin> {
+        &self.plugin
+    }
+
     /// Call the WebAssembly function with the given arguments.
-    #[comemo::memoize]
+    // #[comemo::memoize]
     #[typst_macros::time(name = "call plugin")]
     pub fn call(&self, args: Vec<Bytes>) -> StrResult<Bytes> {
         self.plugin.call(&self.name, args)
     }
 
     /// Transition a plugin and turn the result into a module.
-    #[comemo::memoize]
+    // #[comemo::memoize]
     #[typst_macros::time(name = "transition plugin")]
     pub fn transition(&self, args: Vec<Bytes>) -> StrResult<Module> {
         self.plugin.transition(&self.name, args).map(Plugin::into_module)
@@ -239,7 +245,7 @@ cast! {
 
 /// A plugin with potentially multiple instances for multi-threaded
 /// execution.
-struct Plugin {
+pub struct Plugin {
     /// Shared by all variants of the plugin.
     base: Arc<PluginBase>,
     /// A pool of plugin instances.
@@ -258,7 +264,7 @@ struct Plugin {
 
 impl Plugin {
     /// Create a plugin and turn it into a module.
-    #[comemo::memoize]
+    // #[comemo::memoize]
     #[typst_macros::time(name = "load plugin")]
     fn module(bytes: Bytes) -> StrResult<Module> {
         Self::new(bytes).map(Self::into_module)
@@ -605,4 +611,13 @@ fn wasm_minimal_protocol_send_result_to_host(
         return;
     }
     caller.data_mut().output = buffer;
+}
+
+impl Serialize for Plugin {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        serializer.collect_map::<&str, &str, _>(vec![("type", "plugin")])
+    }
 }

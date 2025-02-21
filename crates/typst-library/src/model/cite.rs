@@ -1,3 +1,4 @@
+use serde::{Serialize, Serializer};
 use typst_syntax::Spanned;
 
 use crate::diag::{error, At, HintedString, SourceResult};
@@ -184,4 +185,19 @@ fn failed_to_format_citation() -> HintedString {
         hint: "check whether this citation is measured \
                without being inserted into the document"
     )
+}
+
+impl Serialize for CitationForm {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer
+    {
+        match self {
+            CitationForm::Normal => serializer.serialize_str("normal"),
+            CitationForm::Prose => serializer.serialize_str("prose"),
+            CitationForm::Full => serializer.serialize_str("full"),
+            CitationForm::Author => serializer.serialize_str("author"),
+            CitationForm::Year => serializer.serialize_str("year"),
+        }
+    }
 }

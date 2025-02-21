@@ -3,6 +3,8 @@ use std::hash::Hash;
 use std::ops::{Add, Sub};
 
 use ecow::{eco_format, EcoString, EcoVec};
+use serde::{Serialize, Serializer};
+use serde::ser::SerializeMap;
 use time::error::{Format, InvalidFormatDescription};
 use time::macros::format_description;
 use time::{format_description, Month, PrimitiveDateTime};
@@ -575,5 +577,46 @@ fn format_time_invalid_format_description_error(
             eco_format!("{} is not supported in {} at index {}", what, context, index)
         }
         err => eco_format!("failed to parse datetime format ({err})"),
+    }
+}
+
+impl Serialize for Datetime {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let size = [
+            self.year().is_some(),
+            self.month().is_some(),
+            self.day().is_some(),
+            self.hour().is_some(),
+            self.minute().is_some(),
+            self.second().is_some(),
+        ]
+            .into_iter()
+            .filter(|&x| x)
+            .count();
+
+        let mut map_ser = serializer.serialize_map(Some(size + 1))?;
+        map_ser.serialize_entry("type", "datetime")?;
+        if let Some(year) = self.year() {
+            map_ser.serialize_entry("year", &year)?;
+        }
+        if let Some(month) = self.month() {
+            map_ser.serialize_entry("month", &month)?;
+        }
+        if let Some(day) = self.day() {
+            map_ser.serialize_entry("day", &day)?;
+        }
+        if let Some(hour) = self.hour() {
+            map_ser.serialize_entry("hour", &hour)?;
+        }
+        if let Some(minute) = self.minute() {
+            map_ser.serialize_entry("minute", &minute)?;
+        }
+        if let Some(second) = self.second() {
+            map_ser.serialize_entry("second", &second)?;
+        }
+        map_ser.end()
     }
 }

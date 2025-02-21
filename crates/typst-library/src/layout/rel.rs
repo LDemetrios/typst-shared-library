@@ -3,6 +3,8 @@ use std::fmt::{self, Debug, Formatter};
 use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign};
 
 use ecow::{eco_format, EcoString};
+use serde::ser::SerializeMap;
+use serde::Serialize;
 use typst_utils::Numeric;
 
 use crate::foundations::{cast, ty, Fold, Repr, Resolve, StyleChain};
@@ -268,3 +270,18 @@ cast! {
     Rel<Abs>,
     self => self.map(Length::from).into_value(),
 }
+
+
+impl<T: Numeric + Serialize> Serialize for Rel<T> {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        let mut map_ser = serializer.serialize_map(Some(3))?;
+        map_ser.serialize_entry("type", "relative")?;
+        map_ser.serialize_entry("rel", &self.rel)?;
+        map_ser.serialize_entry("abs", &self.abs)?;
+        map_ser.end()
+    }
+}
+

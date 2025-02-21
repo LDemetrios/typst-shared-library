@@ -1,3 +1,5 @@
+use serde::{Serialize, Serializer};
+use typst_utils::tick;
 use crate::foundations::{cast, elem, Content, Func, Smart};
 use crate::layout::{Abs, Angle, Length, Ratio, Rel};
 use crate::math::Mathy;
@@ -114,4 +116,20 @@ cast! {
     },
     v: Angle => CancelAngle::Angle(v),
     v: Func => CancelAngle::Func(v),
+}
+
+
+impl Serialize for CancelAngle {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer
+    {
+        tick!();
+        let result = match self {
+            CancelAngle::Angle(v) => v.serialize(serializer),
+            CancelAngle::Func(v) => v.serialize(serializer),
+        };
+        tick!();
+        result
+    }
 }

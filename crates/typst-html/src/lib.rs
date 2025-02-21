@@ -44,7 +44,7 @@ pub fn html_document(
 }
 
 /// The internal implementation of `html_document`.
-#[comemo::memoize]
+// #[comemo::memoize]
 #[allow(clippy::too_many_arguments)]
 fn html_document_impl(
     routines: &Routines,
@@ -111,7 +111,7 @@ pub fn html_fragment(
 }
 
 /// The cached, internal implementation of [`html_fragment`].
-#[comemo::memoize]
+// #[comemo::memoize]
 #[allow(clippy::too_many_arguments)]
 fn html_fragment_impl(
     routines: &Routines,

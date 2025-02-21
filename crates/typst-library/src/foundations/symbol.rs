@@ -74,14 +74,14 @@ impl Symbol {
     }
 
     /// Create a symbol with a static variant list.
-    #[track_caller]
+   //  #[track_caller]
     pub const fn list(list: &'static [(&'static str, char)]) -> Self {
         debug_assert!(!list.is_empty());
         Self(Repr::Complex(list))
     }
 
     /// Create a symbol with a runtime variant list.
-    #[track_caller]
+   //  #[track_caller]
     pub fn runtime(list: Box<[(EcoString, char)]>) -> Self {
         debug_assert!(!list.is_empty());
         Self(Repr::Modified(Arc::new((List::Runtime(list), EcoString::new()))))

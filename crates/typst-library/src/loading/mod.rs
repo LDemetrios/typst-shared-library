@@ -17,6 +17,7 @@ mod yaml_;
 
 use comemo::Tracked;
 use ecow::EcoString;
+use serde::{Serialize, Serializer};
 use typst_syntax::Spanned;
 
 pub use self::cbor_::*;
@@ -53,6 +54,19 @@ pub enum DataSource {
     /// Raw bytes.
     Bytes(Bytes),
 }
+
+impl Serialize for DataSource {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer
+    {
+        match self {
+            DataSource::Path(path) => path.serialize(serializer),
+            DataSource::Bytes(bytes) => bytes.serialize(serializer),
+        }
+    }
+}
+
 
 cast! {
     DataSource,

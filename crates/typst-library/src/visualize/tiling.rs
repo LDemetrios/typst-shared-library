@@ -2,12 +2,14 @@ use std::hash::Hash;
 use std::sync::Arc;
 
 use ecow::{eco_format, EcoString};
+use serde::ser::SerializeMap;
+use serde::{Serialize, Serializer};
 use typst_syntax::{Span, Spanned};
 use typst_utils::{LazyHash, Numeric};
 
 use crate::diag::{bail, SourceResult};
 use crate::engine::Engine;
-use crate::foundations::{func, repr, scope, ty, Content, Smart, StyleChain};
+use crate::foundations::{func, repr, scope, ty, Content, Derived, Smart, StyleChain};
 use crate::introspection::Locator;
 use crate::layout::{Abs, Axes, Frame, Length, Region, Size};
 use crate::visualize::RelativeTo;
@@ -106,13 +108,28 @@ pub struct Tiling(Arc<Repr>);
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]
 struct Repr {
     /// The tiling's rendered content.
-    frame: LazyHash<Frame>,
+    frame: LazyHash<Derived<Content, Frame>>,
     /// The tiling's tile size.
     size: Size,
     /// The tiling's tile spacing.
     spacing: Size,
     /// The tiling's relative transform.
     relative: Smart<RelativeTo>,
+}
+
+impl Serialize for Tiling {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut map_ser = serializer.serialize_map(None)?;
+        map_ser.serialize_entry("type", "tiling")?;
+        map_ser.serialize_entry("size", &self.size())?;
+        map_ser.serialize_entry("spacing", &self.spacing())?;
+        map_ser.serialize_entry("relative", &self.relative())?;
+        map_ser.serialize_entry("body", &self.body())?;
+        map_ser.end()
+    }
 }
 
 #[scope]
@@ -214,7 +231,7 @@ impl Tiling {
 
         Ok(Self(Arc::new(Repr {
             size: frame.size(),
-            frame: LazyHash::new(frame),
+            frame: LazyHash::new(Derived::new(body, frame)),
             spacing: spacing.v.map(|l| l.abs),
             relative,
         })))
@@ -238,7 +255,12 @@ impl Tiling {
 
     /// Return the frame of the tiling.
     pub fn frame(&self) -> &Frame {
-        &self.0.frame
+        &self.0.frame.derived
+    }
+
+    /// Return the body of the tiling.
+    pub fn body(&self) -> &Content {
+        &self.0.frame.source
     }
 
     /// Return the size of the tiling in absolute units.
@@ -281,7 +303,9 @@ impl repr::Repr for Tiling {
             out.push(')');
         }
 
-        out.push_str(", ..)");
+        out.push_str(", ");
+        out.push_str(&self.body().repr());
+        out.push_str(")");
 
         out
     }

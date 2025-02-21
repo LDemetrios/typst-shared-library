@@ -30,7 +30,7 @@ impl Fragment {
     /// Extract the first and only frame.
     ///
     /// Panics if there are multiple frames.
-    #[track_caller]
+   //  #[track_caller]
     pub fn into_frame(self) -> Frame {
         assert_eq!(self.0.len(), 1, "expected exactly one frame");
         self.0.into_iter().next().unwrap()

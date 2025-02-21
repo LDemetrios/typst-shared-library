@@ -1,7 +1,7 @@
 use std::fmt::{self, Debug, Formatter};
-
+use std::iter;
 use ecow::EcoString;
-
+use serde::{Serialize, Serializer};
 use crate::diag::HintedStrResult;
 use crate::foundations::{
     ty, CastInfo, Fold, FromValue, IntoValue, Reflect, Repr, Resolve, StyleChain, Type,
@@ -265,3 +265,25 @@ impl<T: Fold> Fold for Smart<T> {
         }
     }
 }
+
+impl Serialize for AutoValue {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        serializer.collect_map::<&str, &str, _>(iter::once(("type", "auto")))
+    }
+}
+
+impl<T: Serialize> Serialize for Smart<T> {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        match self {
+            Smart::Auto => { AutoValue.serialize(serializer) }
+            Smart::Custom(v) => { v.serialize(serializer) }
+        }
+    }
+}
+

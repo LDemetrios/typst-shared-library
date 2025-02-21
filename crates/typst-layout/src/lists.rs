@@ -6,7 +6,7 @@ use typst_library::foundations::{Content, Context, Depth, Packed, StyleChain};
 use typst_library::introspection::Locator;
 use typst_library::layout::grid::resolve::{Cell, CellGrid};
 use typst_library::layout::{Axes, Fragment, HAlignment, Regions, Sizing, VAlignment};
-use typst_library::model::{EnumElem, ListElem, Numbering, ParElem, ParbreakElem};
+use typst_library::model::{EnumElem, EnumParents, ListElem, Numbering, ParElem, ParbreakElem};
 use typst_library::text::TextElem;
 
 use crate::grid::GridLayouter;
@@ -114,14 +114,14 @@ pub fn layout_enum(
 
         let context = Context::new(None, Some(styles));
         let resolved = if full {
-            parents.push(number);
-            let content = numbering.apply(engine, context.track(), &parents)?.display();
-            parents.pop();
+            parents.0.push(number);
+            let content = numbering.apply(engine, context.track(), &parents.0)?.display();
+            parents.0.pop();
             content
         } else {
             match numbering {
                 Numbering::Pattern(pattern) => {
-                    TextElem::packed(pattern.apply_kth(parents.len(), number))
+                    TextElem::packed(pattern.apply_kth(parents.0.len(), number))
                 }
                 other => other.apply(engine, context.track(), &[number])?.display(),
             }
@@ -142,7 +142,7 @@ pub fn layout_enum(
         cells.push(Cell::new(resolved, locator.next(&())));
         cells.push(Cell::new(Content::empty(), locator.next(&())));
         cells.push(Cell::new(
-            body.styled(EnumElem::set_parents(smallvec![number])),
+            body.styled(EnumElem::set_parents(EnumParents(smallvec![number]))),
             locator.next(&item.body.span()),
         ));
         number =

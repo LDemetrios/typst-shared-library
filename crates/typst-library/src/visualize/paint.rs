@@ -1,7 +1,7 @@
 use std::fmt::{self, Debug, Formatter};
 
 use ecow::EcoString;
-
+use serde::{Serialize};
 use crate::foundations::{cast, Repr, Smart};
 use crate::visualize::{Color, Gradient, RelativeTo, Tiling};
 
@@ -99,4 +99,18 @@ cast! {
     color: Color => Self::Solid(color),
     gradient: Gradient => Self::Gradient(gradient),
     tiling: Tiling => Self::Tiling(tiling),
+}
+
+
+impl Serialize for Paint {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        match self {
+            Self::Solid(color) => color.serialize(serializer),
+            Self::Gradient(gradient) => gradient.serialize(serializer),
+            Self::Tiling(pattern) => pattern.serialize(serializer),
+        }
+    }
 }

@@ -1,7 +1,7 @@
 use std::ops::Deref;
 
 use ecow::{eco_format, EcoString};
-
+use serde::{Serialize, Serializer};
 use crate::diag::{bail, warning, At, SourceResult, StrResult};
 use crate::engine::Engine;
 use crate::foundations::{
@@ -95,6 +95,8 @@ pub struct LinkElem {
     pub current: Option<Destination>,
 }
 
+
+
 impl LinkElem {
     /// Create a link element from a URL with its bare text.
     pub fn from_url(url: Url) -> Self {
@@ -184,6 +186,19 @@ pub enum Destination {
     Position(Position),
     /// An unresolved link to a location in the document.
     Location(Location),
+}
+
+impl Serialize for Destination {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer
+    {
+        match self {
+            Destination::Url(v) => serializer.serialize_str(v),
+            Destination::Position(v) => v.serialize(serializer),
+            Destination::Location(v) => v.serialize(serializer),
+        }
+    }
 }
 
 impl Destination {}

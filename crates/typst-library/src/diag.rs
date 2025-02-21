@@ -8,6 +8,7 @@ use std::string::FromUtf8Error;
 
 use comemo::Tracked;
 use ecow::{eco_vec, EcoVec};
+use serde::{Deserialize, Serialize};
 use typst_syntax::package::{PackageSpec, PackageVersion};
 use typst_syntax::{Span, Spanned, SyntaxError};
 
@@ -168,7 +169,7 @@ pub struct SourceDiagnostic {
 }
 
 /// The severity of a [`SourceDiagnostic`].
-#[derive(Debug, Clone, Copy, Eq, PartialEq, Hash)]
+#[derive(Debug, Clone, Copy, Eq, PartialEq, Hash, Serialize, Deserialize)]
 pub enum Severity {
     /// A fatal error.
     Error,

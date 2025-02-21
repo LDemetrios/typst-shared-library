@@ -271,7 +271,7 @@ pub fn collect<'a>(
 /// become more elegant.
 fn in_list(styles: StyleChain) -> bool {
     ListElem::depth_in(styles).0 > 0
-        || !EnumElem::parents_in(styles).is_empty()
+        || !EnumElem::parents_in(styles).0.is_empty()
         || TermsElem::within_in(styles)
 }
 

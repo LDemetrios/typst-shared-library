@@ -3,7 +3,7 @@ use std::num::{NonZeroU16, NonZeroU64};
 use std::ops::Range;
 
 use ecow::EcoString;
-
+use serde::Serialize;
 use crate::FileId;
 
 /// Defines a range in a file.
@@ -42,7 +42,7 @@ use crate::FileId;
 /// # Raw range spans
 /// Non Typst-files use raw ranges instead of numbered spans. The maximum
 /// encodable value for start and end is 2^23. Larger values will be saturated.
-#[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Hash, Serialize)]
 pub struct Span(NonZeroU64);
 
 impl Span {

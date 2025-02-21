@@ -48,7 +48,7 @@ regex-syntax = { workspace = true }
 roxmltree = { workspace = true }
 rust_decimal = { workspace = true }
 rustybuzz = { workspace = true }
-serde = { workspace = true }
+serde = { workspace = true , features = ["rc"] }
 serde_json = { workspace = true }
 serde_yaml = { workspace = true }
 siphasher = { workspace = true }
@@ -65,6 +65,7 @@ unscanny = { workspace = true }
 usvg = { workspace = true }
 wasmi = { workspace = true }
 xmlwriter = { workspace = true }
+erased-serde = "0.4.5"
 
 [dev-dependencies]
 typst-dev-assets = { workspace = true }

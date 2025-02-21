@@ -2,7 +2,7 @@ use std::fmt::{self, Debug, Formatter};
 use std::num::NonZeroUsize;
 
 use ecow::EcoString;
-
+use serde::{Serialize, Serializer};
 use crate::engine::Engine;
 use crate::foundations::{func, scope, ty, Repr};
 use crate::layout::Position;
@@ -111,3 +111,12 @@ pub trait Locatable {}
 /// Marks this element as not being queryable even though it is locatable for
 /// internal reasons.
 pub trait Unqueriable {}
+
+impl Serialize for Location {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        serializer.serialize_str(&self.repr())
+    }
+}

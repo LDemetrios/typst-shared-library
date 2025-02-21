@@ -8,6 +8,8 @@ use std::hash::Hash;
 use std::ops::Add;
 
 use ecow::eco_format;
+use serde::{Serialize, Serializer};
+use serde::ser::Error;
 use smallvec::SmallVec;
 use typst_syntax::{Span, Spanned};
 use unicode_math_class::MathClass;
@@ -515,6 +517,15 @@ pub struct Derived<S, D> {
     pub derived: D,
 }
 
+impl <S: Serialize, D> Serialize for Derived<S, D> {
+    fn serialize<S1>(&self, serializer: S1) -> Result<S1::Ok, S1::Error>
+    where
+        S1: Serializer
+    {
+        self.source.serialize(serializer)
+    }
+}
+
 impl<S, D> Derived<S, D> {
     /// Create a new instance from the `source` and the `derived` data.
     pub fn new(source: S, derived: D) -> Self {
@@ -552,5 +563,14 @@ impl<S: Fold, D: Fold> Fold for Derived<S, D> {
             source: self.source.fold(outer.source),
             derived: self.derived.fold(outer.derived),
         }
+    }
+}
+
+impl Serialize for Never {
+    fn serialize<S>(&self, _serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer
+    {
+        Err(S::Error::custom("Never is inhabitable"))
     }
 }

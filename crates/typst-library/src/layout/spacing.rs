@@ -1,3 +1,4 @@
+use serde::{Serialize, Serializer};
 use typst_utils::Numeric;
 
 use crate::foundations::{cast, elem, Content};
@@ -190,4 +191,16 @@ cast! {
     },
     v: Rel<Length> => Self::Rel(v),
     v: Fr => Self::Fr(v),
+}
+
+impl Serialize for Spacing {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer
+    {
+        match self {
+            Spacing::Rel(v) => v.serialize(serializer),
+            Spacing::Fr(v) => v.serialize(serializer),
+        }
+    }
 }

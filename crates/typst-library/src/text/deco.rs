@@ -1,11 +1,11 @@
-use smallvec::smallvec;
-
 use crate::diag::SourceResult;
 use crate::engine::Engine;
 use crate::foundations::{elem, Content, Packed, Show, Smart, StyleChain};
 use crate::layout::{Abs, Corners, Length, Rel, Sides};
-use crate::text::{BottomEdge, BottomEdgeMetric, TextElem, TopEdge, TopEdgeMetric};
+use crate::text::{BottomEdge, BottomEdgeMetric, TextDeco, TextElem, TopEdge, TopEdgeMetric};
 use crate::visualize::{Color, FixedStroke, Paint, Stroke};
+use serde::{Serialize};
+use smallvec::smallvec;
 
 /// Underlines text.
 ///
@@ -81,7 +81,7 @@ pub struct UnderlineElem {
 impl Show for Packed<UnderlineElem> {
     #[typst_macros::time(name = "underline", span = self.span())]
     fn show(&self, _: &mut Engine, styles: StyleChain) -> SourceResult<Content> {
-        Ok(self.body.clone().styled(TextElem::set_deco(smallvec![Decoration {
+        Ok(self.body.clone().styled(TextElem::set_deco(TextDeco(smallvec![Decoration {
             line: DecoLine::Underline {
                 stroke: self.stroke(styles).unwrap_or_default(),
                 offset: self.offset(styles),
@@ -89,7 +89,7 @@ impl Show for Packed<UnderlineElem> {
                 background: self.background(styles),
             },
             extent: self.extent(styles),
-        }])))
+        }]))))
     }
 }
 
@@ -173,7 +173,7 @@ pub struct OverlineElem {
 impl Show for Packed<OverlineElem> {
     #[typst_macros::time(name = "overline", span = self.span())]
     fn show(&self, _: &mut Engine, styles: StyleChain) -> SourceResult<Content> {
-        Ok(self.body.clone().styled(TextElem::set_deco(smallvec![Decoration {
+        Ok(self.body.clone().styled(TextElem::set_deco(TextDeco(smallvec![Decoration {
             line: DecoLine::Overline {
                 stroke: self.stroke(styles).unwrap_or_default(),
                 offset: self.offset(styles),
@@ -181,7 +181,7 @@ impl Show for Packed<OverlineElem> {
                 background: self.background(styles),
             },
             extent: self.extent(styles),
-        }])))
+        }]))))
     }
 }
 
@@ -250,7 +250,7 @@ pub struct StrikeElem {
 impl Show for Packed<StrikeElem> {
     #[typst_macros::time(name = "strike", span = self.span())]
     fn show(&self, _: &mut Engine, styles: StyleChain) -> SourceResult<Content> {
-        Ok(self.body.clone().styled(TextElem::set_deco(smallvec![Decoration {
+        Ok(self.body.clone().styled(TextElem::set_deco(TextDeco(smallvec![Decoration {
             // Note that we do not support evade option for strikethrough.
             line: DecoLine::Strikethrough {
                 stroke: self.stroke(styles).unwrap_or_default(),
@@ -258,7 +258,7 @@ impl Show for Packed<StrikeElem> {
                 background: self.background(styles),
             },
             extent: self.extent(styles),
-        }])))
+        }]))))
     }
 }
 
@@ -345,7 +345,7 @@ pub struct HighlightElem {
 impl Show for Packed<HighlightElem> {
     #[typst_macros::time(name = "highlight", span = self.span())]
     fn show(&self, _: &mut Engine, styles: StyleChain) -> SourceResult<Content> {
-        Ok(self.body.clone().styled(TextElem::set_deco(smallvec![Decoration {
+        Ok(self.body.clone().styled(TextElem::set_deco(TextDeco(smallvec![Decoration {
             line: DecoLine::Highlight {
                 fill: self.fill(styles),
                 stroke: self
@@ -357,7 +357,7 @@ impl Show for Packed<HighlightElem> {
                 radius: self.radius(styles).unwrap_or_default(),
             },
             extent: self.extent(styles),
-        }])))
+        }]))))
     }
 }
 
@@ -365,14 +365,14 @@ impl Show for Packed<HighlightElem> {
 ///
 /// Can be positioned over, under, or on top of text, or highlight the text with
 /// a background.
-#[derive(Debug, Clone, Eq, PartialEq, Hash)]
+#[derive(Debug, Clone, Eq, PartialEq, Hash, Serialize)]
 pub struct Decoration {
     pub line: DecoLine,
     pub extent: Abs,
 }
 
 /// A kind of decorative line.
-#[derive(Debug, Clone, Eq, PartialEq, Hash)]
+#[derive(Debug, Clone, Eq, PartialEq, Hash, Serialize)]
 pub enum DecoLine {
     Underline {
         stroke: Stroke<Abs>,

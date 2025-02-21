@@ -3,6 +3,8 @@ use std::iter::Sum;
 use std::ops::{Add, Div, Mul, Neg};
 
 use ecow::EcoString;
+use serde::ser::SerializeMap;
+use serde::Serialize;
 use typst_utils::{Numeric, Scalar};
 
 use crate::foundations::{repr, ty, Repr};
@@ -141,5 +143,18 @@ typst_utils::assign_impl!(Fr /= f64);
 impl Sum for Fr {
     fn sum<I: Iterator<Item = Self>>(iter: I) -> Self {
         Self(iter.map(|s| s.0).sum())
+    }
+}
+
+
+impl Serialize for Fr {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        let mut map_ser = serializer.serialize_map(Some(2))?;
+        map_ser.serialize_entry("type", "fraction")?;
+        map_ser.serialize_entry("value", &self.get())?;
+        map_ser.end()
     }
 }

@@ -3,6 +3,8 @@ use std::str::FromStr;
 
 use comemo::{Track, Tracked, TrackedMut};
 use ecow::{eco_format, eco_vec, EcoString, EcoVec};
+use serde::{Serialize, Serializer};
+use serde::ser::SerializeMap;
 use smallvec::{smallvec, SmallVec};
 use typst_syntax::Span;
 use typst_utils::NonZeroExt;
@@ -289,7 +291,7 @@ impl Counter {
     }
 
     /// Memoized implementation of `sequence`.
-    #[comemo::memoize]
+    // #[comemo::memoize]
     fn sequence_impl(
         &self,
         routines: &Routines,
@@ -691,7 +693,7 @@ struct CounterUpdateElem {
 
     /// The update to perform on the counter.
     #[required]
-    #[internal]
+    // #[internal]
     update: CounterUpdate,
 }
 
@@ -809,5 +811,65 @@ impl ManualPageCounter {
 impl Default for ManualPageCounter {
     fn default() -> Self {
         Self::new()
+    }
+}
+
+impl Serialize for Counter {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut map_ser = serializer.serialize_map(Some(2))?;
+        map_ser.serialize_entry("type", "counter")?;
+        map_ser.serialize_entry("value", &self.0)?;
+        map_ser.end()
+    }
+}
+
+
+impl Serialize for CounterKey {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        match self {
+            CounterKey::Page => PageElem::elem().serialize(serializer),
+            CounterKey::Selector(v) => v.serialize(serializer),
+            CounterKey::Str(v) => v.serialize(serializer)
+        }
+    }
+}
+
+impl Serialize for CounterUpdate {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer
+    {
+        match &self { // That is so wrong... Why is `step` represented with `updated`, mother of god
+            CounterUpdate::Set(v) => v.serialize(serializer),
+            CounterUpdate::Step(v) => v.serialize(serializer),
+            CounterUpdate::Func(v) => v.serialize(serializer),
+        }
+
+    }
+}
+
+impl IntoValue for CounterUpdate {
+    fn into_value(self) -> Value {  // Permits counter update not to be internal
+        match self {
+            CounterUpdate::Set(v) => v.0.into_value(),
+            CounterUpdate::Step(v) => v.into_value(),
+            CounterUpdate::Func(v) => v.into_value(),
+        }
+    }
+}
+
+
+impl Serialize for CounterState {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer
+    {
+        self.0.serialize(serializer)
     }
 }

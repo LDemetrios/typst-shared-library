@@ -9,7 +9,7 @@ use typst_library::introspection::Tag;
 use typst_library::layout::{
     Abs, Axis, Corner, Em, Frame, FrameItem, Point, Size, VAlignment,
 };
-use typst_library::math::{EquationElem, MathSize};
+use typst_library::math::{EquationElem, MathSize, TypstMC};
 use typst_library::text::{Font, Glyph, Lang, Region, TextElem, TextItem};
 use typst_library::visualize::Paint;
 use typst_syntax::Span;
@@ -276,8 +276,8 @@ impl GlyphFragment {
         span: Span,
     ) -> Self {
         let class = EquationElem::class_in(styles)
-            .or_else(|| default_math_class(c))
-            .unwrap_or(MathClass::Normal);
+            .or_else(|| default_math_class(c).map(TypstMC))
+            .unwrap_or(TypstMC(MathClass::Normal));
 
         let mut fragment = Self {
             id,
@@ -295,7 +295,7 @@ impl GlyphFragment {
             limits: Limits::for_char(c),
             italics_correction: Abs::zero(),
             accent_attach: Abs::zero(),
-            class,
+            class: class.0,
             span,
             modifiers: FrameModifiers::get_in(styles),
             extended_shape: false,
@@ -512,7 +512,7 @@ impl FrameFragment {
         Self {
             frame: frame.modified(&FrameModifiers::get_in(styles)),
             font_size: TextElem::size_in(styles),
-            class: EquationElem::class_in(styles).unwrap_or(MathClass::Normal),
+            class: EquationElem::class_in(styles).unwrap_or(TypstMC(MathClass::Normal)).0,
             math_size: EquationElem::size_in(styles),
             limits: Limits::Never,
             spaced: false,

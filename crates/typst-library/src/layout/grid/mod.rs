@@ -4,6 +4,7 @@ use std::num::NonZeroUsize;
 use std::sync::Arc;
 
 use comemo::Track;
+use serde::{Serialize, Serializer};
 use smallvec::{smallvec, SmallVec};
 use typst_utils::NonZeroExt;
 
@@ -338,6 +339,15 @@ impl Show for Packed<GridElem> {
 /// Track sizing definitions.
 #[derive(Debug, Default, Clone, Eq, PartialEq, Hash)]
 pub struct TrackSizings(pub SmallVec<[Sizing; 4]>);
+
+impl Serialize for TrackSizings {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer
+    {
+        self.0.serialize(serializer)
+    }
+}
 
 cast! {
     TrackSizings,
@@ -789,7 +799,7 @@ pub(crate) fn show_grid_cell(
 }
 
 /// A value that can be configured per cell.
-#[derive(Debug, Clone, PartialEq, Hash)]
+#[derive(Debug, Clone, PartialEq, Hash, Serialize)]
 pub enum Celled<T> {
     /// A bare value, the same for all cells.
     Value(T),

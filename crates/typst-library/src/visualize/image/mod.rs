@@ -12,6 +12,7 @@ use std::fmt::{self, Debug, Formatter};
 use std::sync::Arc;
 
 use ecow::EcoString;
+use serde::{Serialize, Serializer};
 use typst_syntax::{Span, Spanned};
 use typst_utils::LazyHash;
 
@@ -292,7 +293,7 @@ impl Image {
 
     /// The internal, non-generic implementation. This is memoized to reuse
     /// the `Arc` and `LazyHash`.
-    #[comemo::memoize]
+    // #[comemo::memoize]
     fn new_impl(
         kind: ImageKind,
         alt: Option<EcoString>,
@@ -447,4 +448,53 @@ pub enum ImageScaling {
     /// Scale with nearest neighbor or a similar algorithm to preserve the
     /// pixelated look of the image.
     Pixelated,
+}
+
+impl Serialize for ImageScaling {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer
+    {
+        match self {
+            Self::Smooth => serializer.serialize_str("smooth"),
+            Self::Pixelated => serializer.serialize_str("pixelated"),
+        }
+    }
+}
+
+impl Serialize for ImageFit {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer
+    {
+        match self {
+            ImageFit::Cover => serializer.serialize_str("cover"),
+            ImageFit::Contain => serializer.serialize_str("contain"),
+            ImageFit::Stretch => serializer.serialize_str("stretch"),
+        }
+    }
+}
+
+
+impl Serialize for ImageFormat {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer
+    {
+        match self {
+            ImageFormat::Raster(f) => match f {
+                RasterFormat::Exchange(e) => match e {
+                    ExchangeFormat::Png => serializer.serialize_str("png"),
+                    ExchangeFormat::Jpg => serializer.serialize_str("jpg"),
+                    ExchangeFormat::Gif => serializer.serialize_str("gif"),
+                }
+                RasterFormat::Pixel(p) => match p {
+                    &_ => todo!()
+                }
+            }
+            ImageFormat::Vector(f) => match f{
+                VectorFormat::Svg => serializer.serialize_str("svg"),
+            }
+        }
+    }
 }

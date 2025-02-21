@@ -1,3 +1,5 @@
+use serde::{Serialize, Serializer};
+use typst_utils::tick;
 use crate::foundations::{func, Cast, Content, Smart};
 use crate::math::EquationElem;
 
@@ -251,4 +253,38 @@ pub enum MathVariant {
     Frak,
     Mono,
     Bb,
+}
+
+impl Serialize for MathSize{
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer
+    {
+        tick!();
+        // Sure?
+        match self {
+            MathSize::ScriptScript => serializer.serialize_str("script-script"),
+            MathSize::Script => serializer.serialize_str("script"),
+            MathSize::Text => serializer.serialize_str("text"),
+            MathSize::Display => serializer.serialize_str("display"),
+        }
+    }
+}
+
+
+impl Serialize for MathVariant {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer
+    {
+        tick!();
+        match self {
+            MathVariant::Serif => serializer.serialize_str("serif"),
+            MathVariant::Sans => serializer.serialize_str("sans"),
+            MathVariant::Cal => serializer.serialize_str("cal"),
+            MathVariant::Frak => serializer.serialize_str("frak"),
+            MathVariant::Mono => serializer.serialize_str("mono"),
+            MathVariant::Bb => serializer.serialize_str("bb"),
+        }
+    }
 }

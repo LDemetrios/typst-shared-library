@@ -1,4 +1,6 @@
-use typst_utils::singleton;
+use serde::{Serialize, Serializer};
+use serde::ser::SerializeMap;
+use typst_utils::{singleton, tick};
 
 use crate::diag::{bail, SourceResult};
 use crate::engine::Engine;
@@ -246,6 +248,18 @@ pub struct FirstLineIndent {
     pub amount: Length,
     /// Whether to indent all paragraphs, not just consecutive ones.
     pub all: bool,
+}
+
+impl Serialize for FirstLineIndent {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer
+    {
+        let mut map_ser = serializer.serialize_map(Some(2))?;
+        map_ser.serialize_entry("amount", &self.amount)?;
+        map_ser.serialize_entry("all", &self.all)?;
+        map_ser.end()
+    }
 }
 
 cast! {
@@ -510,5 +524,30 @@ impl Count for Packed<ParLineMarker> {
     fn update(&self) -> Option<CounterUpdate> {
         // The line counter must be updated manually by the root flow.
         None
+    }
+}
+
+impl Serialize for Linebreaks {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer
+    {
+        tick!();
+        match self {
+            Linebreaks::Simple => serializer.serialize_str("simple"),
+            Linebreaks::Optimized => serializer.serialize_str("optimized"),
+        }
+    }
+}
+
+impl Serialize for LineNumberingScope {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer
+    {
+        match self {
+            LineNumberingScope::Document => serializer.serialize_str("document"),
+            LineNumberingScope::Page => serializer.serialize_str("page"),
+        }
     }
 }

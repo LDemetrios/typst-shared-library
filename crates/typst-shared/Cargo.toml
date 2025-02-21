@@ -1,0 +1,36 @@
+[package]
+name = "typst_shared"
+version.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+edition.workspace = true
+homepage.workspace = true
+repository.workspace = true
+license.workspace = true
+categories.workspace = true
+keywords.workspace = true
+readme.workspace = true
+
+[lints]
+workspace = true
+
+[lib]
+crate-type = ["cdylib"]  # This tells Cargo to build a C-compatible dynamic library.
+
+[dependencies]
+typst = { workspace = true }
+typst-eval = { workspace = true }
+typst-html = { workspace = true }
+typst-kit = { workspace = true }
+typst-macros = { workspace = true }
+typst-pdf = { workspace = true }
+typst-render = { workspace = true }
+typst-svg = { workspace = true }
+typst-timing = { workspace = true }
+chrono = "0.4.39"
+libc = "0.2.169"
+parking_lot = "0.12.3"
+serde_json = "1.0.138"
+serde = { version = "1.0.217", features = ["derive"] }
+serde_yaml = "0.9.34+deprecated"
+hex = "0.4.3"

@@ -1,7 +1,7 @@
 use std::any::TypeId;
 use std::fmt::{self, Debug, Formatter};
 use std::hash::{Hash, Hasher};
-use std::iter::{self, Sum};
+use std::iter::Sum;
 use std::marker::PhantomData;
 use std::ops::{Add, AddAssign, Deref, DerefMut};
 use std::sync::Arc;
@@ -10,7 +10,7 @@ use comemo::Tracked;
 use ecow::{eco_format, EcoString};
 use serde::{Serialize, Serializer};
 use typst_syntax::Span;
-use typst_utils::{fat, singleton, LazyHash, SmallBitSet};
+use typst_utils::{fat, singleton, tick, LazyHash, SmallBitSet};
 
 use crate::diag::{SourceResult, StrResult};
 use crate::engine::Engine;
@@ -705,8 +705,14 @@ impl Serialize for Content {
     where
         S: Serializer,
     {
+        tick!("{:?}", self);
         serializer.collect_map(
-            iter::once(("func".into(), self.func().name().into_value()))
+            vec![
+                // ("type".into(), "content".into_value()),
+                // ("func".into(), self.func().serial_name().into_value()),
+                ("type".into(), self.func().serial_name().into_value()),
+            ]
+                .into_iter()
                 .chain(self.fields()),
         )
     }
@@ -769,6 +775,15 @@ pub struct Packed<T: NativeElement>(
     Content,
     PhantomData<T>,
 );
+
+impl <T: NativeElement> Serialize for Packed<T> {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer
+    {
+        self.0.serialize(serializer)
+    }
+}
 
 impl<T: NativeElement> Packed<T> {
     /// Pack element while retaining its static type.

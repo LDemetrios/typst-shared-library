@@ -1,3 +1,4 @@
+use serde::{Serialize, Serializer};
 use crate::diag::SourceResult;
 use crate::engine::Engine;
 use crate::foundations::{
@@ -443,6 +444,18 @@ impl Geometry {
             Self::Line(line) => Size::new(line.x, line.y),
             Self::Rect(rect) => *rect,
             Self::Curve(curve) => curve.bbox_size(),
+        }
+    }
+}
+
+impl Serialize for FillRule {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        match self {
+            Self::NonZero => { serializer.serialize_str("non-zero") }
+            Self::EvenOdd => { serializer.serialize_str("even-odd") }
         }
     }
 }

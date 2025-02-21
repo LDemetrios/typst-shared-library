@@ -5,6 +5,8 @@ use std::sync::Arc;
 
 use ecow::EcoString;
 use kurbo::Vec2;
+use serde::{Serialize, Serializer};
+use serde::ser::SerializeMap;
 use typst_syntax::{Span, Spanned};
 
 use crate::diag::{bail, SourceResult};
@@ -1146,6 +1148,18 @@ pub enum RelativeTo {
     Parent,
 }
 
+impl Serialize for RelativeTo {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer
+    {
+        match self {
+            RelativeTo::Self_ => serializer.serialize_str("self"),
+            RelativeTo::Parent => serializer.serialize_str("parent"),
+        }
+    }
+}
+
 /// A color stop.
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
 pub struct GradientStop {
@@ -1216,7 +1230,7 @@ cast! {
 ///
 /// This is split into its own function because it is used by all of the
 /// different gradient types.
-#[comemo::memoize]
+// #[comemo::memoize]
 fn process_stops(stops: &[Spanned<GradientStop>]) -> SourceResult<Vec<(Color, Ratio)>> {
     let has_offset = stops.iter().any(|stop| stop.v.offset.is_some());
     if has_offset {
@@ -1303,4 +1317,71 @@ fn sample_stops(stops: &[(Color, Ratio)], mixing_space: ColorSpace, t: f64) -> C
         mixing_space,
     )
     .unwrap()
+}
+
+
+impl Serialize for Gradient {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        match self {
+            Self::Linear(linear) => linear.serialize(serializer),
+            Self::Radial(radial) => radial.serialize(serializer),
+            Self::Conic(conic) => conic.serialize(serializer),
+        }
+    }
+}
+
+
+impl Serialize for RadialGradient {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut map_ser = serializer.serialize_map(Some(8))?;
+        map_ser.serialize_entry("type", "gradient")?;
+        map_ser.serialize_entry("func", "radial")?;
+        map_ser.serialize_entry("center", &self.center)?;
+        map_ser.serialize_entry("radius", &self.radius)?;
+        map_ser.serialize_entry("focal-center", &self.focal_center)?;
+        map_ser.serialize_entry("focal-radius", &self.focal_radius)?;
+        map_ser.serialize_entry("space", &self.space.into_value().repr())?;
+        map_ser.serialize_entry("relative", &self.relative.into_value())?;
+        map_ser.serialize_entry("stops", &self.stops)?;
+        map_ser.end()
+    }
+}
+
+impl Serialize for ConicGradient {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut map_ser = serializer.serialize_map(Some(7))?;
+        map_ser.serialize_entry("type", "gradient")?;
+        map_ser.serialize_entry("func", "conic")?;
+        map_ser.serialize_entry("angle", &self.angle)?;
+        map_ser.serialize_entry("center", &self.center)?;
+        map_ser.serialize_entry("space", &self.space.into_value().repr())?;
+        map_ser.serialize_entry("relative", &self.relative.into_value())?;
+        map_ser.serialize_entry("stops", &self.stops)?;
+        map_ser.end()
+    }
+}
+
+impl Serialize for LinearGradient {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut map_ser = serializer.serialize_map(Some(6))?;
+        map_ser.serialize_entry("type", "gradient")?;
+        map_ser.serialize_entry("func", "linear")?;
+        map_ser.serialize_entry("space", &self.space.into_value().repr())?;
+        map_ser.serialize_entry("angle", &self.angle)?;
+        map_ser.serialize_entry("relative", &self.relative.into_value())?;
+        map_ser.serialize_entry("stops", &self.stops)?;
+        map_ser.end()
+    }
 }

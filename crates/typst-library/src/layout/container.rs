@@ -1,3 +1,5 @@
+use serde::{Serialize, Serializer};
+use serde::ser::Error;
 use crate::diag::{bail, SourceResult};
 use crate::engine::Engine;
 use crate::foundations::{
@@ -565,3 +567,32 @@ mod callbacks {
         ) -> SourceResult<Fragment>
     }
 }
+
+
+impl Serialize for BlockBody {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer
+    {
+        match self {
+            BlockBody::Content(v) => v.serialize(serializer),
+            BlockBody::SingleLayouter(_) => Err(S::Error::custom("unsupported serialization of BlockBody::SingleLayouter")),
+            BlockBody::MultiLayouter(_) => Err(S::Error::custom("unsupported serialization of BlockBody::MultiLayouter")),
+        }
+    }
+}
+
+
+impl Serialize for Sizing {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer
+    {
+        match self {
+            Self::Auto => {AutoValue.serialize(serializer)}
+            Self::Rel(v) => {v.serialize(serializer)}
+            Self::Fr(v) => {v.serialize(serializer)}
+        }
+    }
+}
+

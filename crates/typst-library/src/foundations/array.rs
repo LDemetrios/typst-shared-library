@@ -1100,7 +1100,7 @@ impl<T: FromValue, const N: usize> FromValue for SmallVec<[T; N]> {
 }
 
 /// One element, or multiple provided as an array.
-#[derive(Debug, Clone, PartialEq, Hash)]
+#[derive(Debug, Clone, PartialEq, Hash, Serialize, Deserialize)]
 pub struct OneOrMultiple<T>(pub Vec<T>);
 
 impl<T: Reflect> Reflect for OneOrMultiple<T> {

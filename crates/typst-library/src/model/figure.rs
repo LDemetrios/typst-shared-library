@@ -3,6 +3,8 @@ use std::num::NonZeroUsize;
 use std::str::FromStr;
 
 use ecow::EcoString;
+use serde::{Serialize, Serializer};
+use serde::ser::SerializeMap;
 use typst_utils::NonZeroExt;
 
 use crate::diag::{bail, SourceResult};
@@ -652,3 +654,45 @@ cast! {
 ///
 /// This trait is used to determine the type of a figure.
 pub trait Figurable {}
+
+
+impl Serialize for FigureCaption {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer
+    {
+        let size = [
+            matches!(&self.position, Some(_)),
+            matches!(&self.separator, Some(_)),
+        ]
+            .iter()
+            .filter(|it| **it)
+            .count()
+            + 3;
+
+        let mut map_ser = serializer.serialize_map(Some(size))?;
+        map_ser.serialize_entry("type", "content")?;
+        map_ser.serialize_entry("func", "figure.caption")?;
+        if let Some(x) = &self.position {
+            map_ser.serialize_entry("position", x)?;
+        }
+        if let Some(x) = &self.separator {
+            map_ser.serialize_entry("separator", x)?;
+        }
+        map_ser.serialize_entry("body", &self.body)?;
+        map_ser.end()
+    }
+}
+
+
+impl Serialize for FigureKind {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer
+    {
+        match self {
+            FigureKind::Elem(v) => v.serialize(serializer),
+            FigureKind::Name(v) => v.serialize(serializer),
+        }
+    }
+}

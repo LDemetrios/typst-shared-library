@@ -1,4 +1,6 @@
 use ecow::EcoString;
+use serde::ser::SerializeMap;
+use serde::{Serialize, Serializer};
 use typst_utils::{Numeric, Scalar};
 
 use crate::diag::{HintedStrResult, SourceResult};
@@ -592,6 +594,28 @@ pub struct FixedStroke {
     pub miter_limit: Scalar,
 }
 
+impl Serialize for FixedStroke {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let Self { paint, thickness, cap, join, dash, miter_limit } = &self;
+        let mut map_ser = serializer.serialize_map(Some(7))?;
+        map_ser.serialize_entry("type", "stroke")?;
+        map_ser.serialize_entry("paint", &paint)?;
+        map_ser.serialize_entry("thickness", thickness)?;
+        map_ser.serialize_entry("cap", &cap)?;
+        map_ser.serialize_entry("join", &join)?;
+        if let Some(dash) = dash {
+            map_ser.serialize_entry("dash", dash)?;
+        } else {
+            map_ser.serialize_entry("dash", &NoneValue)?;
+        }
+        map_ser.serialize_entry("miter-limit", &miter_limit.get())?;
+        map_ser.end()
+    }
+}
+
 impl FixedStroke {
     /// Create a stroke from a paint and a thickness.
     pub fn from_pair(paint: impl Into<Paint>, thickness: Abs) -> Self {
@@ -612,6 +636,104 @@ impl Default for FixedStroke {
             join: LineJoin::Miter,
             dash: None,
             miter_limit: Scalar::new(4.0),
+        }
+    }
+}
+
+impl<T: Numeric + Serialize> Serialize for Stroke<T> {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let Self { paint, thickness, cap, join, dash, miter_limit } = &self;
+
+        let size = [
+            matches!(&paint, Smart::Custom(_)),
+            matches!(&thickness, Smart::Custom(_)),
+            matches!(&cap, Smart::Custom(_)),
+            matches!(&join, Smart::Custom(_)),
+            matches!(&dash, Smart::Custom(_)),
+            matches!(&miter_limit, Smart::Custom(_)),
+        ]
+        .iter()
+        .filter(|it| **it)
+        .count()
+            + 1;
+        let mut map_ser = serializer.serialize_map(Some(size))?;
+        map_ser.serialize_entry("type", "stroke")?;
+        if let Smart::Custom(paint) = &paint {
+            map_ser.serialize_entry("paint", &paint)?;
+        }
+        if let Smart::Custom(thickness) = &thickness {
+            map_ser.serialize_entry("thickness", thickness)?;
+        }
+        if let Smart::Custom(cap) = &cap {
+            map_ser.serialize_entry("cap", &cap)?;
+        }
+        if let Smart::Custom(join) = &join {
+            map_ser.serialize_entry("join", &join)?;
+        }
+        if let Smart::Custom(dash) = &dash {
+            if let Some(dash) = dash {
+                map_ser.serialize_entry("dash", dash)?;
+            } else {
+                map_ser.serialize_entry("dash", &NoneValue)?;
+            }
+        }
+        if let Smart::Custom(miter_limit) = &miter_limit {
+            map_ser.serialize_entry("miter-limit", &miter_limit.get())?;
+        }
+        map_ser.end()
+    }
+}
+
+impl Serialize for LineCap {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        serializer.serialize_str(match self {
+            Self::Butt => "butt",
+            Self::Round => "round",
+            Self::Square => "square",
+        })
+    }
+}
+
+impl Serialize for LineJoin {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        serializer.serialize_str(match self {
+            Self::Miter => "miter",
+            Self::Round => "round",
+            Self::Bevel => "bevel",
+        })
+    }
+}
+
+impl<T: Numeric + Serialize, DT: Serialize> Serialize for DashPattern<T, DT> {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut map_ser = serializer.serialize_map(Some(2))?;
+        // Don't serialize type, this is represented with just a Dict
+        map_ser.serialize_entry("array", &self.array)?;
+        map_ser.serialize_entry("phase", &self.phase)?;
+        map_ser.end()
+    }
+}
+
+impl<T: Numeric + Serialize> Serialize for DashLength<T> {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        match self {
+            DashLength::LineWidth => serializer.serialize_str("dot"),
+            DashLength::Length(v) => v.serialize(serializer),
         }
     }
 }
