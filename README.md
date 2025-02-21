@@ -1,3 +1,14 @@
+# Typst Library for JNA
+
+This is the fork of [Typst](https://github.com/typst/typst), that:
+- enhances serialization of various types and functions.
+- exposes C-compatible functions for the Typst compiler. 
+It allows the [TyKo](https://github.com/LDemetrios/TyKo) project to function.
+Follow to TyKo for more details on how to use it.
+
+## The original README of Typst follows.
+
+
 <h1 align="center">
   <img alt="Typst" src="https://user-images.githubusercontent.com/17899797/226108480-722b770e-6313-40d7-84f2-26bebb55a281.png">
 </h1>
