@@ -207,7 +207,7 @@ pub fn write_font_descriptor<'a>(
 /// - For a font with CFF outlines, this produces just the CFF font program.
 ///
 /// In both cases, this returns the already compressed data.
-#[comemo::memoize]
+// #[comemo::memoize]
 #[typst_macros::time(name = "subset font")]
 fn subset_font(
     font: &Font,
@@ -259,7 +259,7 @@ pub(crate) fn subset_tag<T: Hash>(glyphs: &T) -> EcoString {
 }
 
 /// Create a compressed `/ToUnicode` CMap.
-#[comemo::memoize]
+// #[comemo::memoize]
 #[typst_macros::time(name = "create cmap")]
 fn create_cmap(
     glyph_set: &BTreeMap<u16, EcoString>,

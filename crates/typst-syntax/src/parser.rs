@@ -1756,7 +1756,7 @@ impl<'s> Parser<'s> {
     }
 
     /// Eat the current node and return a reference for in-place mutation.
-    #[track_caller]
+   //  #[track_caller]
     fn eat_and_get(&mut self) -> &mut SyntaxNode {
         let offset = self.nodes.len();
         self.eat();
@@ -1788,7 +1788,7 @@ impl<'s> Parser<'s> {
     /// Assert that we are at the given [`SyntaxKind`] and eat it. This should
     /// be used when moving between functions that expect to start with a
     /// specific token.
-    #[track_caller]
+   //  #[track_caller]
     fn assert(&mut self, kind: SyntaxKind) {
         assert_eq!(self.token.kind, kind);
         self.eat();
@@ -2018,7 +2018,7 @@ impl Parser<'_> {
 
     /// Consume the given closing delimiter or produce an error for the matching
     /// opening delimiter at `open`.
-    #[track_caller]
+   //  #[track_caller]
     fn expect_closing_delimiter(&mut self, open: Marker, kind: SyntaxKind) {
         if !self.eat_if(kind) {
             self.nodes[open.0].convert_to_error("unclosed delimiter");

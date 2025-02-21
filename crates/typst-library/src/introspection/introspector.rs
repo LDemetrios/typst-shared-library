@@ -65,13 +65,13 @@ impl Introspector {
     }
 
     /// Retrieves the element with the given index.
-    #[track_caller]
+   //  #[track_caller]
     fn get_by_idx(&self, idx: usize) -> &Content {
         &self.elems[idx].0
     }
 
     /// Retrieves the position of the element with the given index.
-    #[track_caller]
+   //  #[track_caller]
     fn get_pos_by_idx(&self, idx: usize) -> Position {
         self.elems[idx].1
     }

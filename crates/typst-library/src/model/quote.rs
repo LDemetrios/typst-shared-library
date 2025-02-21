@@ -1,3 +1,4 @@
+use serde::{Serialize, Serializer};
 use crate::diag::SourceResult;
 use crate::engine::Engine;
 use crate::foundations::{
@@ -256,3 +257,16 @@ impl ShowSet for Packed<QuoteElem> {
         out
     }
 }
+
+impl Serialize for Attribution {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer
+    {
+        match self {
+            Attribution::Content(v) => v.serialize(serializer),
+            Attribution::Label(v) => v.serialize(serializer),
+        }
+    }
+}
+

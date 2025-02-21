@@ -3,7 +3,8 @@
 use std::fmt::{self, Debug, Formatter};
 use std::num::NonZeroUsize;
 use std::sync::Arc;
-
+use serde::{Serialize, Serializer};
+use serde::ser::SerializeMap;
 use typst_syntax::Span;
 use typst_utils::{LazyHash, Numeric};
 
@@ -35,7 +36,7 @@ impl Frame {
     /// Create a new, empty frame.
     ///
     /// Panics the size is not finite.
-    #[track_caller]
+   //  #[track_caller]
     pub fn new(size: Size, kind: FrameKind) -> Self {
         assert!(size.is_finite());
         Self {
@@ -49,7 +50,7 @@ impl Frame {
     /// Create a new, empty soft frame.
     ///
     /// Panics if the size is not finite.
-    #[track_caller]
+   //  #[track_caller]
     pub fn soft(size: Size) -> Self {
         Self::new(size, FrameKind::Soft)
     }
@@ -57,7 +58,7 @@ impl Frame {
     /// Create a new, empty hard frame.
     ///
     /// Panics if the size is not finite.
-    #[track_caller]
+   //  #[track_caller]
     pub fn hard(size: Size) -> Self {
         Self::new(size, FrameKind::Hard)
     }
@@ -182,7 +183,7 @@ impl Frame {
     /// Insert an item at the given layer in the frame.
     ///
     /// This panics if the layer is greater than the number of layers present.
-    #[track_caller]
+   //  #[track_caller]
     pub fn insert(&mut self, layer: usize, pos: Point, item: FrameItem) {
         Arc::make_mut(&mut self.items).insert(layer, (pos, item));
     }
@@ -555,5 +556,19 @@ impl From<Position> for Dict {
             "x" => pos.point.x,
             "y" => pos.point.y,
         }
+    }
+}
+
+
+impl Serialize for Position {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut map_ser = serializer.serialize_map(Some(3))?;
+        map_ser.serialize_entry("page", &self.page)?;
+        map_ser.serialize_entry("x", &self.point.x)?;
+        map_ser.serialize_entry("y", &self.point.y)?;
+        map_ser.end()
     }
 }

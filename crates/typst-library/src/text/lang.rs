@@ -2,7 +2,8 @@ use std::collections::HashMap;
 use std::str::FromStr;
 
 use ecow::{eco_format, EcoString};
-
+use serde::{Serialize, Serializer};
+use typst_utils::tick;
 use crate::diag::Hint;
 use crate::foundations::{cast, StyleChain};
 use crate::layout::Dir;
@@ -157,6 +158,15 @@ cast! {
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub struct Region([u8; 2]);
 
+impl Serialize for Region {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer
+    {
+        serializer.serialize_str(self.as_str())
+    }
+}
+
 impl Region {
     /// Return the region code as an all uppercase string slice.
     pub fn as_str(&self) -> &str {
@@ -194,6 +204,15 @@ cast! {
 /// An ISO 15924-type script identifier.
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub struct WritingScript([u8; 4], u8);
+
+impl Serialize for WritingScript {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer
+    {
+        serializer.serialize_str(self.as_str())
+    }
+}
 
 impl WritingScript {
     /// Return the script as an all lowercase string slice.
@@ -253,7 +272,7 @@ pub trait LocalName {
 /// Silently falls back to English if no fitting string exists for
 /// the given language + region. Panics if no fitting string exists
 /// in both given language + region and English.
-#[comemo::memoize]
+// #[comemo::memoize]
 pub fn localized_str(lang: Lang, region: Option<Region>, key: &str) -> &'static str {
     let lang_region_bundle = parse_language_bundle(lang, region).unwrap();
     if let Some(str) = lang_region_bundle.get(key) {
@@ -269,7 +288,7 @@ pub fn localized_str(lang: Lang, region: Option<Region>, key: &str) -> &'static 
 
 /// Parses the translation file for a given language and region.
 /// Only returns an error if the language file is malformed.
-#[comemo::memoize]
+// #[comemo::memoize]
 fn parse_language_bundle(
     lang: Lang,
     region: Option<Region>,
@@ -317,5 +336,15 @@ mod tests {
         let region = Some(Region([b'U', b'S']));
         assert!(option_eq(region, "US"));
         assert!(!option_eq(region, "AB"));
+    }
+}
+
+impl Serialize for Lang {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer
+    {
+        tick!();
+        serializer.serialize_str(self.as_str())
     }
 }

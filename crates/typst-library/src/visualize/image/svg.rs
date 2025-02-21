@@ -28,7 +28,7 @@ struct Repr {
 
 impl SvgImage {
     /// Decode an SVG image without fonts.
-    #[comemo::memoize]
+    // #[comemo::memoize]
     #[typst_macros::time(name = "load svg")]
     pub fn new(data: Bytes) -> StrResult<SvgImage> {
         let tree =
@@ -37,7 +37,7 @@ impl SvgImage {
     }
 
     /// Decode an SVG image with access to fonts.
-    #[comemo::memoize]
+    // #[comemo::memoize]
     #[typst_macros::time(name = "load svg")]
     pub fn with_fonts(
         data: Bytes,

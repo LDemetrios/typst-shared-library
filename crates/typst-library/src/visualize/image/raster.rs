@@ -43,7 +43,7 @@ impl RasterImage {
     }
 
     /// The internal, non-generic implementation.
-    #[comemo::memoize]
+    // #[comemo::memoize]
     #[typst_macros::time(name = "load raster image")]
     fn new_impl(
         data: Bytes,
@@ -434,7 +434,7 @@ mod tests {
 
     #[test]
     fn test_image_dpi() {
-        #[track_caller]
+       //  #[track_caller]
         fn test(path: &str, format: ExchangeFormat, dpi: f64) {
             let data = typst_dev_assets::get(path).unwrap();
             let bytes = Bytes::new(data);

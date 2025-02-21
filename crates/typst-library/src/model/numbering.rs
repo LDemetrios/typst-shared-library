@@ -5,7 +5,7 @@ use chinese_number::{
 };
 use comemo::Tracked;
 use ecow::{eco_format, EcoString, EcoVec};
-
+use serde::{Serialize, Serializer};
 use crate::diag::SourceResult;
 use crate::engine::Engine;
 use crate::foundations::{cast, func, Context, Func, Str, Value};
@@ -807,4 +807,31 @@ fn decimal(start: char, mut n: usize) -> EcoString {
         n /= 10;
     }
     cs.chars().rev().collect()
+}
+
+impl Serialize for Numbering {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer
+    {
+        match self {
+            Numbering::Pattern(v) => v.serialize(serializer),
+            Numbering::Func(v) => v.serialize(serializer),
+        }
+    }
+}
+
+impl Serialize for NumberingPattern {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer
+    {
+        let mut fmt = EcoString::new();
+        for (prefix, kind) in &self.pieces {
+            fmt.push_str(&prefix);
+            fmt.push(kind.to_char());
+        }
+        fmt.push_str(&self.suffix);
+        serializer.serialize_str(&*fmt)
+    }
 }

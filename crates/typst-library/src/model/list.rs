@@ -1,5 +1,5 @@
 use comemo::Track;
-
+use serde::{Serialize, Serializer};
 use crate::diag::{bail, SourceResult};
 use crate::engine::Engine;
 use crate::foundations::{
@@ -262,5 +262,17 @@ impl ListItemLike for ListItem {
     fn styled(mut item: Packed<Self>, styles: Styles) -> Packed<Self> {
         item.body.style_in_place(styles);
         item
+    }
+}
+
+impl Serialize for ListMarker {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer
+    {
+        match self {
+            ListMarker::Content(v) => v.serialize(serializer),
+            ListMarker::Func(v) => v.serialize(serializer),
+        }
     }
 }

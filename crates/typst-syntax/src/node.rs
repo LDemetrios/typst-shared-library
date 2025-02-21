@@ -5,6 +5,7 @@ use std::sync::Arc;
 
 use ecow::{eco_format, eco_vec, EcoString, EcoVec};
 
+use crate::ast::AstNode;
 use crate::{FileId, Span, SyntaxKind};
 
 /// A node in the untyped syntax tree.
@@ -41,7 +42,7 @@ impl SyntaxNode {
     /// Create a dummy node of the given kind.
     ///
     /// Panics if `kind` is `SyntaxKind::Error`.
-    #[track_caller]
+   //  #[track_caller]
     pub const fn placeholder(kind: SyntaxKind) -> Self {
         if matches!(kind, SyntaxKind::Error) {
             panic!("cannot create error placeholder");
@@ -115,6 +116,16 @@ impl SyntaxNode {
         match &self.0 {
             Repr::Leaf(_) | Repr::Error(_) => [].iter(),
             Repr::Inner(inner) => inner.children.iter(),
+        }
+    }
+
+    pub fn to_text_ref(&self) -> EcoString {
+        match &self.0 {
+            Repr::Leaf(leaf) => leaf.text.clone(),
+            Repr::Inner(inner) => {
+                inner.children.iter().cloned().map(Self::into_text).collect()
+            }
+            Repr::Error(node) => node.text.clone(),
         }
     }
 

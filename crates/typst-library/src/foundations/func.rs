@@ -6,6 +6,8 @@ use std::sync::{Arc, LazyLock};
 
 use comemo::{Tracked, TrackedMut};
 use ecow::{eco_format, EcoString};
+use serde::{Serialize, Serializer};
+use serde::ser::SerializeMap;
 use typst_syntax::{ast, Span, SyntaxNode};
 use typst_utils::{singleton, LazyHash, Static};
 
@@ -568,3 +570,74 @@ cast! {
     Closure,
     self => Value::Func(self.into()),
 }
+
+impl serde::Serialize for Func {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        match &self.repr {
+            Repr::Native(f) => {
+                let mut map_ser = serializer.serialize_map(Some(2))?;
+                map_ser.serialize_entry("type", "native-func")?;
+                map_ser.serialize_entry("name", f.serial_name())?;
+                map_ser.end()
+            }
+            Repr::Element(f) => {
+                let mut map_ser = serializer.serialize_map(Some(2))?;
+                map_ser.serialize_entry("type", "element")?;
+                map_ser.serialize_entry("name", f.serial_name())?;
+                map_ser.end()
+            }
+            Repr::Closure(f) => f.serialize(serializer),
+            Repr::With(f) => {
+                let mut map_ser = serializer.serialize_map(Some(3))?;
+                map_ser.serialize_entry("type", "with")?;
+                map_ser.serialize_entry("origin", &f.0)?;
+                map_ser.serialize_entry("args", &f.1)?;
+                map_ser.end()
+            }
+            Repr::Plugin(f) => {
+                let mut map_ser = serializer.serialize_map(Some(2))?;
+                map_ser   .serialize_entry("type", "plugin_func")?;
+                map_ser.serialize_entry("plugin", f.plugin().as_ref())?;
+                map_ser.serialize_entry("name", f.name())?;
+                map_ser.end()
+            }
+        }
+    }
+}
+
+impl NativeFuncData {
+    pub fn serial_name(&self) -> &'static str {
+        match self.name {
+            "display" => "math.display",
+            "linear-rgb" => "color.linear-rgb",
+            "hsl" => "color.hsl",
+            "hsv" => "color.hsv",
+            _ => match self.title {
+                "Linear Gradient" => "gradient.linear",
+                "Radial Gradient" => "gradient.radial",
+                "Conic Gradient" => "gradient.conic",
+                _ => self.name
+            }
+        }
+    }
+}
+
+impl Serialize for Closure {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut map_ser = serializer.serialize_map(Some(5))?;
+        map_ser.serialize_entry("type", "closure")?;
+        map_ser.serialize_entry("node", &self.node.to_text_ref())?;
+        map_ser.serialize_entry("defaults", &self.defaults)?;
+        map_ser.serialize_entry("captured", &self.captured)?;
+        map_ser.serialize_entry("num-pos-params", &self.num_pos_params)?;
+        map_ser.end()
+    }
+}
+
+

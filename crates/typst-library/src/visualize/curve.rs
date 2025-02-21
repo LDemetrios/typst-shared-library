@@ -1,4 +1,5 @@
 use kurbo::ParamCurveExtrema;
+use serde::{Serialize, Serializer};
 use typst_macros::{scope, Cast};
 use typst_utils::Numeric;
 
@@ -386,6 +387,18 @@ pub enum CloseMode {
     Smooth,
     /// Closes the curve with a straight line.
     Straight,
+}
+
+impl Serialize for CloseMode {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer
+    {
+        match self {
+            Self::Smooth => serializer.serialize_str("smooth"),
+            Self::Straight => serializer.serialize_str("straight"),
+        }
+    }
 }
 
 /// A curve consisting of movements, lines, and Bézier segments.

@@ -2,6 +2,7 @@ use std::num::NonZeroUsize;
 use std::str::FromStr;
 
 use comemo::{Track, Tracked};
+use serde::{Serialize, Serializer};
 use smallvec::SmallVec;
 use typst_syntax::Span;
 use typst_utils::{Get, NonZeroExt};
@@ -714,7 +715,7 @@ fn compute_auto_indents(
 /// Determines the maximum prefix inset (prefix width + gap) at each outline
 /// level, for the outline with the given `loc`. Levels for which there is no
 /// information available yield `None`.
-#[comemo::memoize]
+// #[comemo::memoize]
 fn query_prefix_widths(
     introspector: Tracked<Introspector>,
     outline_loc: Location,
@@ -760,5 +761,17 @@ impl Construct for PrefixInfo {
 impl Show for Packed<PrefixInfo> {
     fn show(&self, _: &mut Engine, _: StyleChain) -> SourceResult<Content> {
         Ok(Content::empty())
+    }
+}
+
+impl Serialize for OutlineIndent {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer
+    {
+        match self {
+            OutlineIndent::Rel(v) => v.serialize(serializer),
+            OutlineIndent::Func(v) => v.serialize(serializer),
+        }
     }
 }

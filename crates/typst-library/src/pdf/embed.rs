@@ -1,4 +1,5 @@
 use ecow::EcoString;
+use serde::{Serialize, Serializer};
 use typst_library::foundations::Target;
 use typst_syntax::Spanned;
 
@@ -102,4 +103,18 @@ pub enum EmbeddedFileRelationship {
     Alternative,
     /// Additional resources for the document.
     Supplement,
+}
+
+impl Serialize for EmbeddedFileRelationship {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer
+    {
+        match self{
+            EmbeddedFileRelationship::Source => serializer.serialize_str("source"),
+            EmbeddedFileRelationship::Data => serializer.serialize_str("data"),
+            EmbeddedFileRelationship::Alternative => serializer.serialize_str("alternative"),
+            EmbeddedFileRelationship::Supplement => serializer.serialize_str("supplement"),
+        }
+    }
 }

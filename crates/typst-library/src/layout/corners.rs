@@ -1,5 +1,6 @@
 use std::fmt::{self, Debug, Formatter};
-
+use serde::{Serialize, Serializer};
+use serde::ser::SerializeMap;
 use typst_utils::Get;
 
 use crate::diag::HintedStrResult;
@@ -311,5 +312,21 @@ impl Corner {
             Self::BottomRight => Side::Right,
             Self::BottomLeft => Side::Bottom,
         }
+    }
+}
+
+
+impl <T: Serialize> Serialize for Corners<T> {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer
+    {
+        // Just as dictionary
+        let mut map_ser = serializer.serialize_map(Some(4))?;
+        map_ser.serialize_entry("top-left", &self.top_left)?;
+        map_ser.serialize_entry("top-right", &self.top_right)?;
+        map_ser.serialize_entry("bottom-right", &self.bottom_right)?;
+        map_ser.serialize_entry("bottom-left", &self.bottom_left)?;
+        map_ser.end()
     }
 }

@@ -1,3 +1,4 @@
+use serde::{Serialize, Serializer};
 use crate::diag::SourceResult;
 use crate::engine::Engine;
 use crate::foundations::{elem, Content, Packed, Show, StyleChain};
@@ -76,4 +77,16 @@ pub enum Smallcaps {
     Minuscules,
     /// All letters become small capitals.
     All,
+}
+
+impl Serialize for Smallcaps {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer
+    {
+        match self {
+            Smallcaps::Minuscules => serializer.serialize_str("minuscules"),
+            Smallcaps::All => serializer.serialize_str("all"),
+        }
+    }
 }

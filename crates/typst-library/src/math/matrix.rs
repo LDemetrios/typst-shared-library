@@ -1,6 +1,8 @@
+use serde::{Serialize, Serializer};
+use serde::ser::{SerializeMap, SerializeSeq};
 use smallvec::{smallvec, SmallVec};
 use typst_syntax::Spanned;
-use typst_utils::{default_math_class, Numeric};
+use typst_utils::{default_math_class, tick, Numeric};
 use unicode_math_class::MathClass;
 
 use crate::diag::{bail, At, HintedStrResult, StrResult};
@@ -449,4 +451,53 @@ cast! {
     self => self.0.into_value(),
     v: isize => Self(smallvec![v]),
     v: Array => Self(v.into_iter().map(Value::cast).collect::<HintedStrResult<_>>()?),
+}
+
+impl Serialize for DelimiterPair {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer
+    {
+        tick!();
+        let mut arr_ser = serializer.serialize_seq(Some(2))?;
+        arr_ser.serialize_element(&self.open)?;
+        arr_ser.serialize_element(&self.close)?;
+        arr_ser.end()
+    }
+}
+
+impl Serialize for Delimiter {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer
+    {
+        tick!();
+        match self.0 {
+            None => NoneValue.serialize(serializer),
+            Some(v) => v.serialize(serializer),
+        }
+    }
+}
+
+impl <T: Numeric + Serialize> Serialize for Augment<T> {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer
+    {
+        tick!();
+        let mut map_ser = serializer.serialize_map(Some(3))?;
+        map_ser.serialize_entry("hline", &self.hline)?;
+        map_ser.serialize_entry("vline", &self.vline)?;
+        map_ser.serialize_entry("stroke", &self.stroke)?;
+        map_ser.end()
+    }
+}
+
+impl Serialize for AugmentOffsets {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer
+    {
+        self.0.serialize(serializer)
+    }
 }

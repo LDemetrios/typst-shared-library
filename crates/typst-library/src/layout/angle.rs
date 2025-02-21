@@ -4,6 +4,8 @@ use std::iter::Sum;
 use std::ops::{Add, Div, Mul, Neg};
 
 use ecow::EcoString;
+use serde::ser::SerializeMap;
+use serde::Serialize;
 use typst_utils::{Numeric, Scalar};
 
 use crate::foundations::{func, repr, scope, ty, Repr};
@@ -240,5 +242,18 @@ mod tests {
     fn test_angle_unit_conversion() {
         assert!((Angle::rad(2.0 * PI).to_deg() - 360.0) < 1e-4);
         assert!((Angle::deg(45.0).to_rad() - std::f64::consts::FRAC_PI_4) < 1e-4);
+    }
+}
+
+
+impl Serialize for Angle {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        let mut map_ser = serializer.serialize_map(Some(2))?;
+        map_ser.serialize_entry("type", "angle")?;
+        map_ser.serialize_entry("deg", &self.to_deg())?;
+        map_ser.end()
     }
 }

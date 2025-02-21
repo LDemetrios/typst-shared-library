@@ -112,7 +112,7 @@ fn render_outline_glyph(
     }
 
     // Rasterize the glyph with `pixglyph`.
-    #[comemo::memoize]
+    // #[comemo::memoize]
     fn rasterize(
         font: &Font,
         id: GlyphId,

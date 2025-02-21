@@ -6,6 +6,7 @@ use std::str::Utf8Error;
 use std::sync::Arc;
 
 use ecow::{eco_format, EcoString};
+use serde::ser::SerializeMap;
 use serde::{Serialize, Serializer};
 use typst_utils::LazyHash;
 
@@ -278,11 +279,11 @@ impl Serialize for Bytes {
     where
         S: Serializer,
     {
-        if serializer.is_human_readable() {
-            serializer.serialize_str(&eco_format!("{self:?}"))
-        } else {
-            serializer.serialize_bytes(self)
-        }
+
+            let mut map_ser = serializer.serialize_map(Some(2))?;
+            map_ser.serialize_entry("type", "bytes")?;
+            map_ser.serialize_entry("value", self.as_slice())?;
+            map_ser.end()
     }
 }
 

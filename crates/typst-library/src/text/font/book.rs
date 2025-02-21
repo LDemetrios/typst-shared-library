@@ -514,7 +514,7 @@ mod tests {
 
     #[test]
     fn test_coverage() {
-        #[track_caller]
+       //  #[track_caller]
         fn test(set: &[u32], runs: &[u32]) {
             let coverage = Coverage::from_vec(set.to_vec());
             assert_eq!(coverage.0, runs);

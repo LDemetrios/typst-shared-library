@@ -1,3 +1,4 @@
+use serde::{Serialize, Serializer};
 use crate::foundations::{elem, scope, Cast, Content, Packed, Smart};
 use crate::introspection::{Locatable, Unqueriable};
 use crate::layout::{Alignment, Em, Length, Rel};
@@ -206,3 +207,15 @@ pub enum PlacementScope {
 /// ```
 #[elem]
 pub struct FlushElem {}
+
+impl Serialize for PlacementScope {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer
+    {
+        match self {
+            PlacementScope::Column => serializer.serialize_str("column"),
+            PlacementScope::Parent => serializer.serialize_str("parent"),
+        }
+    }
+}

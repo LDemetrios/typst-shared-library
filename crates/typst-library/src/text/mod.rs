@@ -37,10 +37,12 @@ use icu_properties::sets::CodePointSetData;
 use icu_provider::AsDeserializingBufferProvider;
 use icu_provider_blob::BlobDataProvider;
 use rustybuzz::Feature;
+use serde::{Serialize, Serializer};
+use serde::ser::{SerializeMap, SerializeSeq};
 use smallvec::SmallVec;
 use ttf_parser::Tag;
 use typst_syntax::Spanned;
-use typst_utils::singleton;
+use typst_utils::{singleton, tick};
 
 use crate::diag::{bail, warning, HintedStrResult, SourceResult};
 use crate::engine::Engine;
@@ -741,7 +743,7 @@ pub struct TextElem {
     #[internal]
     #[fold]
     #[ghost]
-    pub deco: SmallVec<[Decoration; 1]>,
+    pub deco: TextDeco,
 
     /// A case transformation that should be applied to the text.
     #[internal]
@@ -891,7 +893,7 @@ cast! {
 }
 
 /// Font family fallback list.
-#[derive(Debug, Default, Clone, PartialEq, Hash)]
+#[derive(Debug, Default, Clone, PartialEq, Hash, Serialize)]
 pub struct FontList(pub Vec<FontFamily>);
 
 impl<'a> IntoIterator for &'a FontList {
@@ -958,7 +960,7 @@ pub fn variant(styles: StyleChain) -> FontVariant {
 }
 
 /// The size of text.
-#[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Hash, Serialize)]
 pub struct TextSize(pub Length);
 
 impl Fold for TextSize {
@@ -1083,7 +1085,7 @@ impl TryInto<VerticalFontMetric> for BottomEdgeMetric {
 }
 
 /// The direction of text and inline objects in their line.
-#[derive(Debug, Default, Copy, Clone, Eq, PartialEq, Hash)]
+#[derive(Debug, Default, Copy, Clone, Eq, PartialEq, Hash, Serialize)]
 pub struct TextDir(pub Smart<Dir>);
 
 cast! {
@@ -1397,5 +1399,189 @@ mod tests {
     #[test]
     fn test_text_elem_size() {
         assert_eq!(std::mem::size_of::<TextElem>(), std::mem::size_of::<EcoString>());
+    }
+}
+
+#[derive(Clone, Debug, Default, Hash)]
+pub struct TextDeco(pub SmallVec<[Decoration; 1]>);
+
+impl Fold for TextDeco {
+    fn fold(self, outer: Self) -> Self {
+        tick!();
+        Self(self.0.fold(outer.0))
+    }
+}
+
+impl Serialize for TextDeco {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        tick!();
+        let mut arr_ser = serializer.serialize_seq(Some(self.0.len()))?;
+        for el in &self.0 {
+            arr_ser.serialize_element(el)?;
+        }
+        arr_ser.end()
+    }
+}
+
+impl Serialize for FontFamily {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        tick!();
+        self.name.serialize(serializer)
+    }
+}
+
+impl Serialize for TopEdge {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        tick!();
+        match self {
+            TopEdge::Metric(v) => match v {
+                TopEdgeMetric::Ascender => serializer.serialize_str("ascender"),
+                TopEdgeMetric::CapHeight => serializer.serialize_str("cap-height"),
+                TopEdgeMetric::XHeight => serializer.serialize_str("x-height"),
+                TopEdgeMetric::Baseline => serializer.serialize_str("baseline"),
+                TopEdgeMetric::Bounds => serializer.serialize_str("bounds"),
+            }
+            TopEdge::Length(v) => v.serialize(serializer)
+        }
+    }
+}
+
+
+impl Serialize for BottomEdge {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        tick!();
+        match self {
+            BottomEdge::Metric(v) => match v {
+                BottomEdgeMetric::Baseline => serializer.serialize_str("baseline"),
+                BottomEdgeMetric::Descender => serializer.serialize_str("descender"),
+                BottomEdgeMetric::Bounds => serializer.serialize_str("bounds"),
+            }
+            BottomEdge::Length(v) => v.serialize(serializer)
+        }
+    }
+}
+
+impl Serialize for Hyphenate {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        tick!();
+        self.0.serialize(serializer)
+    }
+}
+
+impl Serialize for StylisticSets {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut map_ser = serializer.serialize_seq(Some(self.0.count_ones() as usize))?;
+        for i in self.sets() {
+            map_ser.serialize_element(&i)?;
+        }
+        map_ser.end()
+    }
+}
+impl Serialize for NumberType {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        match self {
+            NumberType::Lining => serializer.serialize_str("lining"),
+            NumberType::OldStyle => serializer.serialize_str("old-style"),
+        }
+    }
+}
+
+impl Serialize for NumberWidth {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        match self {
+            NumberWidth::Proportional => serializer.serialize_str("proportional"),
+            NumberWidth::Tabular => serializer.serialize_str("tabular"),
+        }
+    }
+}
+
+impl Serialize for FontFeatures {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut map_ser = serializer.serialize_map(Some(self.0.len()))?;
+        for (tag, num) in &self.0 {
+            let bytes = Tag(tag.0).to_bytes();
+            let tag_str = std::str::from_utf8(&bytes).unwrap_or_default();
+            map_ser.serialize_entry(tag_str, num)?;
+        }
+        map_ser.end()
+    }
+}
+
+impl Serialize for ItalicToggle {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        self.0.serialize(serializer)
+    }
+}
+
+impl Serialize for WeightDelta {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        self.0.serialize(serializer)
+    }
+}
+
+impl Serialize for Costs {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let Self { hyphenation, runt, widow, orphan } = &self;
+
+        let size = [
+            matches!(&hyphenation, Some(_)),
+            matches!(&runt, Some(_)),
+            matches!(&widow, Some(_)),
+            matches!(&orphan, Some(_)),
+        ]
+            .iter()
+            .filter(|it| **it)
+            .count()
+            + 1;
+        let mut map_ser = serializer.serialize_map(Some(size))?;
+        if let Some(hyphenation) = &hyphenation {
+            map_ser.serialize_entry("hyphenation", &hyphenation)?;
+        }
+        if let Some(runt) = &runt {
+            map_ser.serialize_entry("runt", runt)?;
+        }
+        if let Some(widow) = &widow {
+            map_ser.serialize_entry("widow", &widow)?;
+        }
+        if let Some(orphan) = &orphan {
+            map_ser.serialize_entry("orphan", &orphan)?;
+        }
+        map_ser.end()
     }
 }

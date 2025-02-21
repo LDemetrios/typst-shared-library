@@ -535,7 +535,7 @@ fn create_field_method(field: &Field) -> TokenStream {
     } else if field.synthesized {
         quote! {
             #[doc = #docs]
-            #[track_caller]
+           //  #[track_caller]
             #vis fn #ident(&self) -> ::std::option::Option<&#output> {
                 self.#ident.as_ref()
             }

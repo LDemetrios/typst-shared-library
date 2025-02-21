@@ -8,7 +8,7 @@ use ecow::{eco_format, EcoString};
 use serde::de::IgnoredAny;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use unscanny::Scanner;
-
+use typst_utils::tick;
 use crate::is_ident;
 
 /// A type alias for a map of key-value pairs used to collect unknown fields
@@ -174,7 +174,7 @@ impl PackageManifest {
 }
 
 /// Identifies a package.
-#[derive(Clone, Eq, PartialEq, Hash)]
+#[derive(Clone, Eq, PartialEq, Hash, Serialize, Deserialize)]
 pub struct PackageSpec {
     /// The namespace the package lives in.
     pub namespace: EcoString,
@@ -419,6 +419,7 @@ impl Display for PackageVersion {
 
 impl Serialize for PackageVersion {
     fn serialize<S: Serializer>(&self, s: S) -> Result<S::Ok, S::Error> {
+        tick!();
         s.collect_str(self)
     }
 }
@@ -489,6 +490,7 @@ impl Display for VersionBound {
 
 impl Serialize for VersionBound {
     fn serialize<S: Serializer>(&self, s: S) -> Result<S::Ok, S::Error> {
+        tick!();
         s.collect_str(self)
     }
 }

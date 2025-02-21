@@ -65,7 +65,7 @@ fn require<T>(val: Option<T>) -> HintedStrResult<T> {
 pub struct ContextElem {
     /// The function to call with the context.
     #[required]
-    #[internal]
+    // #[internal]
     func: Func,
 }
 

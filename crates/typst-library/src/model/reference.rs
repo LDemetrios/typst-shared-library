@@ -1,6 +1,6 @@
 use comemo::Track;
 use ecow::eco_format;
-
+use serde::{Serialize, Serializer};
 use crate::diag::{bail, At, Hint, SourceResult};
 use crate::engine::Engine;
 use crate::foundations::{
@@ -377,6 +377,18 @@ pub enum RefForm {
     Page,
 }
 
+impl Serialize for RefForm {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer
+    {
+        match self {
+            Self::Normal => serializer.serialize_str("normal"),
+            Self::Page => serializer.serialize_str("page"),
+        }
+    }
+}
+
 /// Marks an element as being able to be referenced. This is used to implement
 /// the `@ref` element.
 pub trait Refable {
@@ -388,4 +400,16 @@ pub trait Refable {
 
     /// Returns the numbering of this element.
     fn numbering(&self) -> Option<&Numbering>;
+}
+
+impl Serialize for Supplement {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer
+    {
+        match self {
+            Supplement::Content(v) => v.serialize(serializer),
+            Supplement::Func(v) => v.serialize(serializer),
+        }
+    }
 }

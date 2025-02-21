@@ -6,6 +6,8 @@ use std::ptr::NonNull;
 use std::sync::LazyLock;
 
 use ecow::EcoString;
+use serde::ser::SerializeMap;
+use serde::{Serialize, Serializer};
 use smallvec::SmallVec;
 #[doc(inline)]
 pub use typst_macros::elem;
@@ -32,6 +34,75 @@ impl Element {
     /// The element's normal name (e.g. `enum`).
     pub fn name(self) -> &'static str {
         self.0.name
+    }
+
+    /// The element's serial name (e.g. `enum.item`)
+    pub fn serial_name(self) -> &'static str {
+        // println!("{} : {}", self.0.title, self.0.name);
+        match self.0.title {
+            "Cases" => "math.cases",
+            "Grid Cell" => "grid.cell",
+            "Outline Entry" => "outline.entry",
+            "Footnote Entry" => "footnote.entry",
+            "Table Cell" => "table.cell",
+            "Grid Header" => "grid.header",
+            "Grid Footer" => "grid.footer",
+            "Table Header" => "table.header",
+            "Table Footer" => "table.footer",
+            "Bullet List Item" => "list.item",
+            "Numbered List Item" => "enum.item",
+            "Term List Item" => "terms.item",
+            "Table Horizontal Line" => "table.hline",
+            "Table Vertical Line" => "table.vline",
+            "Grid Horizontal Line" => "grid.hline",
+            "Grid Vertical Line" => "grid.vline",
+            "Curve Move" => "curve.move",
+            "Curve Line" => "curve.line",
+            "Curve Close" => "curve.close",
+            "Curve Quadratic Segment" => "curve.quad",
+            "Curve Cubic Segment" => "curve.cubic",
+            _ => {
+                let dollar = self.0.docs.contains("$");
+                match self.0.name {
+                    "elem" => "html.elem",
+                    "embed" => "pdf.embed",
+                    "frame" => "html.frame",
+                    "caption" => "figure.caption",
+                    "accent" => "math.accent",
+                    "binom" => "math.binom",
+                    "cancel" => "math.cancel",
+                    "cases" => "math.cases",
+                    "class" => "math.class",
+                    "class-class" => "math.class-class",
+                    "equation" => "math.equation",
+                    "display" => "math.display",
+                    "flush" => "place.flush",
+                    "frac" => "math.frac",
+                    "mat" => "math.mat",
+                    "primes" => "math.primes",
+                    "stretch" => "math.stretch",
+                    "op" => "math.op",
+                    "vec" => "math.vec",
+                    "attach" => "math.attach",
+                    "scripts" => "math.scripts",
+                    "limits" => "math.limits",
+                    "lr" => "math.lr",
+                    "mid" => "math.mid",
+                    "root" => "math.root",
+                    "underline" => if dollar { "math.underline" } else { "underline" },
+                    "overline" => if dollar { "math.overline" } else { "overline" },
+                    "underbrace" =>if dollar { "math.underbrace" } else { "underbrace" },
+                    "overbrace" => if dollar { "math.overbrace" } else { "overbrace" },
+                    "underbracket" =>if dollar { "math.underbracket" } else { "underbracket" },
+                    "overbracket" => if dollar { "math.overbracket" } else { "overbracket" },
+                    "underparen" => if dollar { "math.underparen" } else { "underparen" },
+                    "overparen" => if dollar { "math.overparen" } else { "overparen" },
+                    "undershell" => if dollar { "math.undershell" } else { "undershell" },
+                    "overshell" => if dollar { "math.overshell" } else { "overshell" },
+                    _ => self.0.name,
+                }
+            }
+        }
     }
 
     /// The element's title case name, for use in documentation
@@ -330,4 +401,16 @@ pub trait ShowSet {
     /// Finalize the fully realized form of the element. Use this for effects
     /// that should work even in the face of a user-defined show rule.
     fn show_set(&self, styles: StyleChain) -> Styles;
+}
+
+impl Serialize for Element {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer
+    {
+        let mut map_ser = serializer.serialize_map(Some(2))?;
+        map_ser.serialize_entry("type", "element")?;
+        map_ser.serialize_entry("name", &self.serial_name())?;
+        map_ser.end()
+    }
 }

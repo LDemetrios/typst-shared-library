@@ -4,6 +4,7 @@ use std::hash::{Hash, Hasher};
 use ecow::{eco_format, EcoString};
 use indexmap::map::Entry;
 use indexmap::IndexMap;
+use serde::{Serialize, Serializer};
 use typst_syntax::Span;
 
 use crate::diag::{bail, DeprecationSink, HintedStrResult, HintedString, StrResult};
@@ -131,14 +132,14 @@ impl Scope {
     }
 
     /// Define a native function through a Rust type that shadows the function.
-    #[track_caller]
+   //  #[track_caller]
     pub fn define_func<T: NativeFunc>(&mut self) -> &mut Binding {
         let data = T::data();
         self.define(data.name, Func::from(data))
     }
 
     /// Define a native function with raw function data.
-    #[track_caller]
+   //  #[track_caller]
     pub fn define_func_with_data(
         &mut self,
         data: &'static NativeFuncData,
@@ -147,14 +148,14 @@ impl Scope {
     }
 
     /// Define a native type.
-    #[track_caller]
+   //  #[track_caller]
     pub fn define_type<T: NativeType>(&mut self) -> &mut Binding {
         let data = T::data();
         self.define(data.name, Type::from(data))
     }
 
     /// Define a native element.
-    #[track_caller]
+   //  #[track_caller]
     pub fn define_elem<T: NativeElement>(&mut self) -> &mut Binding {
         let data = T::data();
         self.define(data.name, Element::from(data))
@@ -170,7 +171,7 @@ impl Scope {
     ///   a `Vm` or if you are binding to something that is not an AST
     ///   identifier (e.g. when constructing a dynamic
     ///   [`Module`](super::Module))
-    #[track_caller]
+   //  #[track_caller]
     pub fn define(&mut self, name: &'static str, value: impl IntoValue) -> &mut Binding {
         #[cfg(debug_assertions)]
         if self.deduplicate && self.map.contains_key(name) {
@@ -409,4 +410,22 @@ fn unknown_variable_math(var: &str, in_global: bool) -> HintedString {
     }
 
     res
+}
+
+impl Serialize for Scope {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer
+    {
+        self.map.serialize(serializer)
+    }
+}
+
+impl Serialize for Binding {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer
+    {
+        self.value.serialize(serializer)
+    }
 }

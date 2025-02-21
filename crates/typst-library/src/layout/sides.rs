@@ -1,6 +1,7 @@
 use std::fmt::{self, Debug, Formatter};
 use std::ops::Add;
-
+use serde::{Serialize, Serializer};
+use serde::ser::SerializeMap;
 use typst_utils::Get;
 
 use crate::diag::{bail, HintedStrResult};
@@ -340,4 +341,19 @@ cast! {
         Alignment::BOTTOM => Self::Bottom,
         _ => bail!("cannot convert this alignment to a side"),
     },
+}
+
+impl<T: Serialize> Serialize for Sides<T> {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        // Just as dictionary
+        let mut map_ser = serializer.serialize_map(Some(4))?;
+        map_ser.serialize_entry("left", &self.left)?;
+        map_ser.serialize_entry("top", &self.top)?;
+        map_ser.serialize_entry("right", &self.right)?;
+        map_ser.serialize_entry("bottom", &self.bottom)?;
+        map_ser.end()
+    }
 }

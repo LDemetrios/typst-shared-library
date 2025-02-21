@@ -3,6 +3,8 @@ use std::iter::Sum;
 use std::ops::{Add, Div, Mul, Neg, Rem};
 
 use ecow::EcoString;
+use serde::ser::SerializeMap;
+use serde::Serialize;
 use typst_utils::{Numeric, Scalar};
 
 use crate::foundations::{cast, repr, Fold, Repr, Value};
@@ -275,5 +277,17 @@ mod tests {
     #[test]
     fn test_length_unit_conversion() {
         assert!((Abs::mm(150.0).to_cm() - 15.0) < 1e-4);
+    }
+}
+
+impl Serialize for Abs {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        let mut map_ser = serializer.serialize_map(Some(2))?;
+        map_ser.serialize_entry("type", "length")?;
+        map_ser.serialize_entry("pt", &self.to_pt())?;
+        map_ser.end()
     }
 }

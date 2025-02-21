@@ -650,7 +650,7 @@ fn layout_class(
     ctx: &mut MathContext,
     styles: StyleChain,
 ) -> SourceResult<()> {
-    let style = EquationElem::set_class(Some(elem.class)).wrap();
+    let style = EquationElem::set_class(Some(TypstMC(elem.class))).wrap();
     let mut fragment = ctx.layout_into_fragment(&elem.body, styles.chain(&style))?;
     fragment.set_class(elem.class);
     fragment.set_limits(Limits::for_class(elem.class));

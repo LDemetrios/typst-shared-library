@@ -1,7 +1,9 @@
 use ecow::EcoString;
+use serde::{Serialize, Serializer};
+use serde::ser::SerializeSeq;
 use typst_syntax::is_newline;
 use unicode_segmentation::UnicodeSegmentation;
-
+use typst_utils::tick;
 use crate::diag::{bail, HintedStrResult, StrResult};
 use crate::foundations::{
     array, cast, dict, elem, Array, Dict, FromValue, Packed, PlainText, Smart, Str,
@@ -353,11 +355,13 @@ fn array_to_set(value: Array) -> HintedStrResult<[EcoString; 2]> {
 }
 
 /// A dict of single and double quotes.
-#[derive(Debug, Clone, Eq, PartialEq, Hash)]
+#[derive(Debug, Clone, Eq, PartialEq, Hash, Serialize)]
 pub struct SmartQuoteDict {
     double: Smart<SmartQuoteSet>,
     single: Smart<SmartQuoteSet>,
 }
+
+
 
 cast! {
     SmartQuoteDict,
@@ -386,4 +390,18 @@ cast! {
         double: Smart::Custom(value),
         single: Smart::Auto,
     },
+}
+
+
+impl Serialize for SmartQuoteSet {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer
+    {
+        tick!();
+        let mut arr_ser = serializer.serialize_seq(Some(2))?;
+        arr_ser.serialize_element(&self.open)?;
+        arr_ser.serialize_element(&self.close)?;
+        arr_ser.end()
+    }
 }

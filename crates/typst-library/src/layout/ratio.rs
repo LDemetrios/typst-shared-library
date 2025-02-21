@@ -2,6 +2,8 @@ use std::fmt::{self, Debug, Formatter};
 use std::ops::{Add, Div, Mul, Neg};
 
 use ecow::EcoString;
+use serde::ser::SerializeMap;
+use serde::Serialize;
 use typst_utils::{Numeric, Scalar};
 
 use crate::foundations::{repr, ty, Repr};
@@ -151,3 +153,16 @@ typst_utils::assign_impl!(Ratio -= Ratio);
 typst_utils::assign_impl!(Ratio *= Ratio);
 typst_utils::assign_impl!(Ratio *= f64);
 typst_utils::assign_impl!(Ratio /= f64);
+
+
+impl Serialize for Ratio {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        let mut map_ser = serializer.serialize_map(Some(2))?;
+        map_ser.serialize_entry("type", "ratio")?;
+        map_ser.serialize_entry("value", &self.get())?;
+        map_ser.end()
+    }
+}

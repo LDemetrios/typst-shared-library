@@ -5,9 +5,13 @@ use std::{mem, ptr};
 
 use comemo::Tracked;
 use ecow::{eco_vec, EcoString, EcoVec};
+use rust_decimal::prelude::ToPrimitive;
+use serde::ser::SerializeMap;
+use serde::{Serialize, Serializer};
 use smallvec::SmallVec;
 use typst_syntax::Span;
-use typst_utils::LazyHash;
+use typst_utils::{tick, LazyHash};
+use erased_serde::Serialize as ErasedSerialize;
 
 use crate::diag::{SourceResult, Trace, Tracepoint};
 use crate::engine::Engine;
@@ -284,7 +288,7 @@ impl Property {
     pub fn new<E, T>(id: u8, value: T) -> Self
     where
         E: NativeElement,
-        T: Debug + Clone + Hash + Send + Sync + 'static,
+        T: Debug + ErasedSerialize + Clone + Hash + Send + Sync + 'static,
     {
         Self {
             elem: E::elem(),
@@ -361,7 +365,7 @@ impl Clone for Block {
 ///
 /// Auto derived for all types that implement [`Any`], [`Clone`], [`Hash`],
 /// [`Debug`], [`Send`] and [`Sync`].
-trait Blockable: Debug + Send + Sync + 'static {
+trait Blockable: Debug + ErasedSerialize + Send + Sync + 'static {
     /// Equivalent to `downcast_ref` for the block.
     fn as_any(&self) -> &dyn Any;
 
@@ -372,7 +376,7 @@ trait Blockable: Debug + Send + Sync + 'static {
     fn dyn_clone(&self) -> Block;
 }
 
-impl<T: Debug + Clone + Hash + Send + Sync + 'static> Blockable for T {
+impl<T: Debug + ErasedSerialize +  Clone + Hash + Send + Sync + 'static> Blockable for T {
     fn as_any(&self) -> &dyn Any {
         self
     }
@@ -882,5 +886,128 @@ pub struct Depth(pub usize);
 impl Fold for Depth {
     fn fold(self, outer: Self) -> Self {
         Self(outer.0 + self.0)
+    }
+}
+
+impl Serialize for Styles {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        tick!();
+        let result = self.0.serialize(serializer);
+        tick!();
+        result
+    }
+}
+
+impl Serialize for Style {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        tick!();
+        let result = match self {
+            Style::Property(v) => v.serialize(serializer),
+            Style::Recipe(v) => v.serialize(serializer),
+            Style::Revocation(v) => v.serialize(serializer),
+        };
+        tick!();
+        result
+    }
+}
+
+impl Serialize for Property {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        tick!();
+        let mut map_ser = serializer.serialize_map(Some(4))?;
+        map_ser.serialize_entry("type", "set-rule")?;
+        map_ser.serialize_entry("elem", &self.elem.serial_name())?;
+        map_ser.serialize_entry("id", &self.elem.field_name(self.id))?;
+        map_ser.serialize_entry("id-int", &self.id)?;
+        map_ser.serialize_entry("value", &self.value)?;
+        let result = map_ser.end();
+        tick!();
+        result
+    }
+}
+
+impl Serialize for RecipeIndex {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        tick!();
+        let result = serializer.serialize_u64(self.0.to_u64().unwrap());
+        tick!();
+        result
+    }
+}
+
+impl Serialize for Recipe {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        tick!();
+        let mut map_ser = serializer.serialize_map(Some(3))?;
+        map_ser.serialize_entry("type", "show-rule")?;
+        map_ser.serialize_entry("selector", &self.selector)?;
+        map_ser.serialize_entry("transform", &self.transform)?;
+        let result = map_ser.end();
+        tick!();
+        result
+    }
+}
+
+impl Serialize for Block {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        tick!("{:?}", self);
+        let result = erased_serde::serialize(&self.0, serializer);
+        tick!();
+        result
+    }
+}
+
+impl Serialize for dyn Blockable {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        erased_serde::serialize(self, serializer)
+    }
+}
+
+impl Serialize for Transformation {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        tick!();
+        let result = match self {
+            Self::Content(v) => v.serialize(serializer),
+            Self::Func(v) => v.serialize(serializer),
+            Self::Style(v) => v.serialize(serializer),
+        };
+        tick!();
+        result
+    }
+}
+
+impl Serialize for Depth {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        tick!();
+        let result = self.0.serialize(serializer);
+        tick!();
+        result
     }
 }

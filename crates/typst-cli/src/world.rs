@@ -182,7 +182,7 @@ impl SystemWorld {
     }
 
     /// Lookup a source file by id.
-    #[track_caller]
+   //  #[track_caller]
     pub fn lookup(&self, id: FileId) -> Source {
         self.source(id).expect("file id does not point to any source file")
     }
@@ -311,7 +311,7 @@ impl FileSlot {
 }
 
 /// Lazily processes data for a file.
-struct SlotCell<T> {
+pub struct SlotCell<T> {
     /// The processed data.
     data: Option<FileResult<T>>,
     /// A hash of the raw file contents / access error.

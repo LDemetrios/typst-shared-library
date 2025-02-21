@@ -3,6 +3,8 @@ use std::sync::Arc;
 
 use comemo::Tracked;
 use ecow::{eco_format, EcoString, EcoVec};
+use serde::{Serialize, Serializer};
+use serde::ser::SerializeMap;
 use smallvec::SmallVec;
 
 use crate::diag::{bail, HintedStrResult, StrResult};
@@ -445,5 +447,93 @@ impl FromValue for ShowableSelector {
         let selector = Selector::from_value(value)?;
         validate(&selector, false)?;
         Ok(Self(selector))
+    }
+}
+
+
+impl Serialize for Selector {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        match self {
+            Selector::Location(v) => return v.serialize(serializer),
+            Selector::Label(v) => return v.serialize(serializer),
+            Selector::Regex(v) => return v.serialize(serializer),
+            _ => {}
+        }
+
+        let size = match self {
+            Self::Elem(_, dict) => {
+                if dict.is_some() {
+                    4
+                } else {
+                    3
+                }
+            }
+            Self::Before { selector: _, end: _, inclusive }
+            | Self::After { selector: _, start: _, inclusive } => {
+                if !*inclusive {
+                    5
+                } else {
+                    4
+                }
+            }
+            _ => 3,
+        };
+
+        let mut map_ser = serializer.serialize_map(Some(size))?;
+        map_ser.serialize_entry("type", "selector")?;
+
+        macro_rules! ser_entries {
+            ($(($key:expr, $value: expr)),+) => {{
+                $(map_ser.serialize_entry($key, $value)?;)+
+            }}
+        }
+
+        match self {
+            Self::Elem(elem, dict) => {
+                ser_entries!(("func", "element"), ("element", elem.serial_name()));
+                if let Some(dict) = dict {
+                    let dict = dict
+                        .iter()
+                        .map(|(id, value)| (elem.field_name(*id).unwrap(), value.clone()))
+                        .map(|(name, value)| (EcoString::from(name).into(), value))
+                        .collect::<Dict>();
+                    map_ser.serialize_entry("where", &dict)?;
+                }
+            }
+            Self::Can(cap) => {
+                ser_entries!(("func", "can"), ("id", &eco_format!("{cap:?}")))
+            }
+            Self::Or(selectors) => ser_entries!(("func", "or"), ("variants", selectors)),
+            Self::And(selectors) => {
+                ser_entries!(("func", "and"), ("variants", selectors))
+            }
+            Self::Before { selector, end, inclusive } => {
+                ser_entries!(("func", "before"), ("selector", selector.as_ref()), ("end", end.as_ref()));
+                if !*inclusive {
+                    map_ser.serialize_entry("inclusive", &false)?;
+                }
+            }
+            Self::After { selector, start, inclusive } => {
+                ser_entries!(("func", "after"), ("selector", selector.as_ref()), ("start", start.as_ref()));
+                if !*inclusive {
+                    map_ser.serialize_entry("inclusive", &false)?;
+                }
+            }
+            _ => {}
+        };
+        map_ser.end()
+    }
+}
+
+
+impl Serialize for LocatableSelector {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer
+    {
+        self.0.serialize(serializer)
     }
 }

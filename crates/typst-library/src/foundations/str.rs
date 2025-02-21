@@ -5,7 +5,7 @@ use std::ops::{Add, AddAssign, Deref, Range};
 
 use comemo::Tracked;
 use ecow::EcoString;
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Serialize, Serializer};
 use typst_syntax::{Span, Spanned};
 use unicode_normalization::UnicodeNormalization;
 use unicode_segmentation::UnicodeSegmentation;
@@ -29,7 +29,7 @@ macro_rules! __format_str {
 
 #[doc(hidden)]
 pub use ecow::eco_format;
-
+use serde::ser::SerializeMap;
 #[doc(inline)]
 pub use crate::__format_str as format_str;
 
@@ -1011,4 +1011,16 @@ cast! {
     },
     v: Str => Self::Str(v),
     v: Func => Self::Func(v)
+}
+
+impl Serialize for Regex {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut map_ser = serializer.serialize_map(Some(2))?;
+        map_ser.serialize_entry("type", "regex")?;
+        map_ser.serialize_entry("regex", self.0.as_str())?;
+        map_ser.end()
+    }
 }

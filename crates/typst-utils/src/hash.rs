@@ -5,7 +5,9 @@ use std::ops::{Deref, DerefMut};
 use std::sync::atomic::Ordering;
 
 use portable_atomic::AtomicU128;
+use serde::{Serialize, Serializer};
 use siphasher::sip128::{Hasher128, SipHasher13};
+use crate::tick;
 
 /// A wrapper type with lazily-computed hash.
 ///
@@ -233,3 +235,17 @@ impl<T: Debug> Debug for ManuallyHash<T> {
         self.value.fmt(f)
     }
 }
+
+// TODO
+impl <T : Serialize + Debug> Serialize for LazyHash<T> {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer
+    {
+        tick!("{:?}", self);
+        let result = self.value.serialize(serializer);
+        tick!();
+        result
+    }
+}
+

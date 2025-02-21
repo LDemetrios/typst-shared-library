@@ -1,7 +1,10 @@
+use std::collections::HashMap;
 use std::fmt::{self, Debug, Formatter};
 use std::ops::Add;
 
 use ecow::{eco_format, eco_vec, EcoString, EcoVec};
+use serde::{Serialize, Serializer};
+use serde::ser::SerializeMap;
 use typst_syntax::{Span, Spanned};
 
 use crate::diag::{bail, error, At, SourceDiagnostic, SourceResult, StrResult};
@@ -464,4 +467,26 @@ fn missing_key_no_default(key: ArgumentKey) -> EcoString {
             ArgumentKey::Name(name) => name.repr(),
         }
     )
+}
+
+impl Serialize for Args {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let (named, positional): (Vec<_>, Vec<_>) =
+            self.items.iter().partition(|&it| it.name.is_some());
+
+        let mut map_ser = serializer.serialize_map(Some(3))?;
+        map_ser.serialize_entry("type", "arguments")?;
+
+        let positional_vec: Vec<_> = positional.iter().map(|it| &it.value.v).collect();
+        map_ser.serialize_entry("positional", &positional_vec)?;
+        let named_map: HashMap<_, _> = named
+            .iter()
+            .map(|it| (it.name.as_ref().unwrap(), &it.value.v))
+            .collect();
+        map_ser.serialize_entry("named", &named_map)?;
+        map_ser.end()
+    }
 }

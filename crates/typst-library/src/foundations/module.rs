@@ -2,6 +2,8 @@ use std::fmt::{self, Debug, Formatter};
 use std::sync::Arc;
 
 use ecow::{eco_format, EcoString};
+use serde::ser::SerializeMap;
+use serde::Serialize;
 use typst_syntax::FileId;
 
 use crate::diag::{bail, DeprecationSink, StrResult};
@@ -159,5 +161,24 @@ impl repr::Repr for Module {
 impl PartialEq for Module {
     fn eq(&self, other: &Self) -> bool {
         self.name == other.name && Arc::ptr_eq(&self.inner, &other.inner)
+    }
+}
+
+impl Serialize for Module {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        let mut map_ser = serializer.serialize_map(Some(
+            1 + match self.name {
+                None => 0,
+                Some(_) => 1,
+            },
+        ))?;
+        map_ser.serialize_entry("type", "module")?;
+        if let Some(x) = &self.name {
+            map_ser.serialize_entry("name", x)?;
+        }
+        map_ser.end()
     }
 }

@@ -145,7 +145,7 @@ impl Collector {
     }
 
     /// Walks through all test files and collects the tests.
-    fn walk_files(&mut self) {
+    fn  walk_files(&mut self) {
         for entry in walkdir::WalkDir::new(crate::SUITE_PATH).sort_by_file_name() {
             let entry = entry.unwrap();
             let path = entry.path();

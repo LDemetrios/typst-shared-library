@@ -214,7 +214,7 @@ mod tests {
         };
     }
 
-    #[track_caller]
+   //  #[track_caller]
     fn test_click(world: impl WorldLike, click: Point, expected: Option<Jump>) {
         let world = world.acquire();
         let world = world.borrow();
@@ -231,7 +231,7 @@ mod tests {
         }
     }
 
-    #[track_caller]
+   //  #[track_caller]
     fn test_cursor(world: impl WorldLike, pos: impl FilePos, expected: Option<Position>) {
         let world = world.acquire();
         let world = world.borrow();

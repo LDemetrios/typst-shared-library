@@ -1,6 +1,7 @@
 use std::fmt::{self, Debug, Display, Formatter};
 
 use ecow::{EcoString, EcoVec};
+use serde::{ Serialize, Serializer};
 use typst_syntax::Span;
 use typst_utils::{PicoStr, ResolvedPicoStr};
 
@@ -113,7 +114,7 @@ impl HtmlTag {
     /// Creates a compile-time constant `HtmlTag`.
     ///
     /// Should only be used in const contexts because it can panic.
-    #[track_caller]
+   //  #[track_caller]
     pub const fn constant(string: &'static str) -> Self {
         if string.is_empty() {
             panic!("tag name must not be empty");
@@ -161,7 +162,7 @@ cast! {
 }
 
 /// Attributes of an HTML element.
-#[derive(Debug, Default, Clone, Eq, PartialEq, Hash)]
+#[derive(Debug, Default, Clone, Eq, PartialEq, Hash, Serialize)]
 pub struct HtmlAttrs(pub EcoVec<(HtmlAttr, EcoString)>);
 
 impl HtmlAttrs {
@@ -192,6 +193,15 @@ cast! {
 #[derive(Copy, Clone, Eq, PartialEq, Hash)]
 pub struct HtmlAttr(PicoStr);
 
+impl Serialize for HtmlAttr {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer
+    {
+        serializer.serialize_str(self.0.resolve().as_str())
+    }
+}
+
 impl HtmlAttr {
     /// Intern an HTML attribute string at runtime.
     pub fn intern(string: &str) -> StrResult<Self> {
@@ -214,7 +224,7 @@ impl HtmlAttr {
     /// explicit `const { .. }` block) because otherwise a panic for a malformed
     /// attribute or not auto-internible constant will only be caught at
     /// runtime.
-    #[track_caller]
+   //  #[track_caller]
     pub const fn constant(string: &'static str) -> Self {
         if string.is_empty() {
             panic!("attribute name must not be empty");
