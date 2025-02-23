@@ -1346,7 +1346,7 @@ impl Serialize for RadialGradient {
         map_ser.serialize_entry("radius", &self.radius)?;
         map_ser.serialize_entry("focal-center", &self.focal_center)?;
         map_ser.serialize_entry("focal-radius", &self.focal_radius)?;
-        map_ser.serialize_entry("space", &self.space.into_value().repr())?;
+        map_ser.serialize_entry("space", &self.space.into_value())?;
         map_ser.serialize_entry("relative", &self.relative.into_value())?;
         map_ser.serialize_entry("stops", &self.stops)?;
         map_ser.end()
@@ -1363,7 +1363,7 @@ impl Serialize for ConicGradient {
         map_ser.serialize_entry("func", "conic")?;
         map_ser.serialize_entry("angle", &self.angle)?;
         map_ser.serialize_entry("center", &self.center)?;
-        map_ser.serialize_entry("space", &self.space.into_value().repr())?;
+        map_ser.serialize_entry("space", &self.space.into_value())?;
         map_ser.serialize_entry("relative", &self.relative.into_value())?;
         map_ser.serialize_entry("stops", &self.stops)?;
         map_ser.end()
@@ -1378,7 +1378,7 @@ impl Serialize for LinearGradient {
         let mut map_ser = serializer.serialize_map(Some(6))?;
         map_ser.serialize_entry("type", "gradient")?;
         map_ser.serialize_entry("func", "linear")?;
-        map_ser.serialize_entry("space", &self.space.into_value().repr())?;
+        map_ser.serialize_entry("space", &self.space.into_value())?;
         map_ser.serialize_entry("angle", &self.angle)?;
         map_ser.serialize_entry("relative", &self.relative.into_value())?;
         map_ser.serialize_entry("stops", &self.stops)?;

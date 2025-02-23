@@ -21,6 +21,7 @@ crate-type = ["cdylib"]  # This tells Cargo to build a C-compatible dynamic libr
 typst = { workspace = true }
 typst-eval = { workspace = true }
 typst-html = { workspace = true }
+typst-library = { workspace = true }
 typst-kit = { workspace = true }
 typst-macros = { workspace = true }
 typst-pdf = { workspace = true }

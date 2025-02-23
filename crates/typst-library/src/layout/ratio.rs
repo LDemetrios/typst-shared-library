@@ -3,7 +3,7 @@ use std::ops::{Add, Div, Mul, Neg};
 
 use ecow::EcoString;
 use serde::ser::SerializeMap;
-use serde::Serialize;
+use serde::{Deserialize, Deserializer, Serialize};
 use typst_utils::{Numeric, Scalar};
 
 use crate::foundations::{repr, ty, Repr};
@@ -164,5 +164,55 @@ impl Serialize for Ratio {
         map_ser.serialize_entry("type", "ratio")?;
         map_ser.serialize_entry("value", &self.get())?;
         map_ser.end()
+    }
+}
+
+// No idea, just chatgpting
+impl<'de> Deserialize<'de> for Ratio {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        use serde::de::{MapAccess, Visitor};
+        use std::fmt;
+
+        struct RatioVisitor;
+
+        impl<'de> Visitor<'de> for RatioVisitor {
+            type Value = Ratio;
+
+            fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+                formatter.write_str("a map with keys 'type' and 'value'")
+            }
+
+            fn visit_map<M>(self, mut map: M) -> Result<Self::Value, M::Error>
+            where
+                M: MapAccess<'de>,
+            {
+                let mut ratio_type: Option<String> = None;
+                let mut value: Option<f64> = None;
+
+                while let Some(key) = map.next_key::<String>()? {
+                    match key.as_str() {
+                        "type" => {
+                            ratio_type = Some(map.next_value()?);
+                        }
+                        "value" => {
+                            value = Some(map.next_value()?);
+                        }
+                        _ => return Err(serde::de::Error::unknown_field(&key, &["type", "value"])),
+                    }
+                }
+
+                if ratio_type.as_deref() != Some("ratio") {
+                    return Err(serde::de::Error::custom("Expected type 'ratio'"));
+                }
+
+                let value = value.ok_or_else(|| serde::de::Error::missing_field("value"))?;
+                Ok(Ratio::new(value))
+            }
+        }
+
+        deserializer.deserialize_map(RatioVisitor)
     }
 }

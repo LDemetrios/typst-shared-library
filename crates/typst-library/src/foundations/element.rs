@@ -61,6 +61,8 @@ impl Element {
             "Curve Close" => "curve.close",
             "Curve Quadratic Segment" => "curve.quad",
             "Curve Cubic Segment" => "curve.cubic",
+            "Paragraph Line" => "par.line",
+            "Raw Text / Code Line" => "raw.line",
             _ => {
                 let dollar = self.0.docs.contains("$");
                 match self.0.name {

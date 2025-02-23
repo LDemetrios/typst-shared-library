@@ -974,20 +974,25 @@ impl Serialize for Margin {
     where
         S: Serializer
     {
-        let mut map_ser = serializer.serialize_map(Some(4))?;
-
-        map_ser.serialize_entry("top", &self.sides.top)?;
-        map_ser.serialize_entry("bottom", &self.sides.bottom)?;
-        match self.two_sided { // Hope that's right...
-            None | Some(false) => {
-                map_ser.serialize_entry("left", &self.sides.left)?;
-                map_ser.serialize_entry("right", &self.sides.right)?;
-            }
-            Some(true) => {
-                map_ser.serialize_entry("inside", &self.sides.left)?;
-                map_ser.serialize_entry("outside", &self.sides.right)?;
+        let two_sided = self.two_sided.unwrap_or(false);
+        if !two_sided && self.sides.is_uniform() {
+            if let Some(left) = self.sides.left {
+                return left.serialize(serializer);
             }
         }
+
+        let mut map_ser = serializer.serialize_map(None)?;
+
+        if let Some(c) = self.sides.top { map_ser.serialize_entry("top", &c)?; }
+        if let Some(c) = self.sides.bottom { map_ser.serialize_entry("bottom", &c)?; }
+        if two_sided {
+            if let Some(c) = self.sides.left { map_ser.serialize_entry("inside", &c)?; }
+            if let Some(c) = self.sides.right { map_ser.serialize_entry("outside", &c)?; }
+        } else {
+            if let Some(c) = self.sides.left { map_ser.serialize_entry("left", &c)?; }
+            if let Some(c) = self.sides.right { map_ser.serialize_entry("right", &c)?; }
+        }
+
         map_ser.end()
     }
 }
