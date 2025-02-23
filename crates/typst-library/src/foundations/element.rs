@@ -38,7 +38,6 @@ impl Element {
 
     /// The element's serial name (e.g. `enum.item`)
     pub fn serial_name(self) -> &'static str {
-        // println!("{} : {}", self.0.title, self.0.name);
         match self.0.title {
             "Cases" => "math.cases",
             "Grid Cell" => "grid.cell",

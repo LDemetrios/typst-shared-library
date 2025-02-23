@@ -120,8 +120,6 @@ fn compile_impl<D: Document>(
     )?
     .content();
 
-    println!("{:?}", content);
-
     let mut iter = 0;
     let mut subsink;
     let mut introspector = &empty_introspector;
