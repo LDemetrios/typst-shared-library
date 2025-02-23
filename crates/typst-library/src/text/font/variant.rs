@@ -1,7 +1,7 @@
 use std::fmt::{self, Debug, Formatter};
 
 use ecow::EcoString;
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
 use crate::foundations::{cast, Cast, IntoValue, Repr};
 use crate::layout::Ratio;
@@ -186,8 +186,8 @@ cast! {
 
 /// The width of a font.
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash)]
-#[derive(Serialize, Deserialize)]
-#[serde(transparent)]
+// #[derive(Serialize, Deserialize)]
+// #[serde(transparent)]
 pub struct FontStretch(pub(super) u16);
 
 impl FontStretch {
@@ -293,6 +293,26 @@ impl From<usvg::FontStretch> for FontStretch {
         }
     }
 }
+
+impl Serialize for FontStretch {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer
+    {
+        self.to_ratio().serialize(serializer)
+    }
+}
+
+impl<'de> Deserialize<'de> for FontStretch {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let ratio = Ratio::deserialize(deserializer)?;
+        Ok(FontStretch::from_ratio(ratio))
+    }
+}
+
 
 cast! {
     FontStretch,

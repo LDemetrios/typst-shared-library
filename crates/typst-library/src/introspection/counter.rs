@@ -3,8 +3,8 @@ use std::str::FromStr;
 
 use comemo::{Track, Tracked, TrackedMut};
 use ecow::{eco_format, eco_vec, EcoString, EcoVec};
-use serde::{Serialize, Serializer};
 use serde::ser::SerializeMap;
+use serde::{Serialize, Serializer};
 use smallvec::{smallvec, SmallVec};
 use typst_syntax::Span;
 use typst_utils::NonZeroExt;
@@ -13,8 +13,8 @@ use crate::diag::{bail, At, HintedStrResult, SourceResult};
 use crate::engine::{Engine, Route, Sink, Traced};
 use crate::foundations::{
     cast, elem, func, scope, select_where, ty, Args, Array, Construct, Content, Context,
-    Element, Func, IntoValue, Label, LocatableSelector, NativeElement, Packed, Repr,
-    Selector, Show, Smart, Str, StyleChain, Value,
+    Dict, Element, Func, IntoValue, Label, LocatableSelector, NativeElement, Packed,
+    Repr, Selector, Show, Smart, Str, StyleChain, Value,
 };
 use crate::introspection::{Introspector, Locatable, Location, Tag};
 use crate::layout::{Frame, FrameItem, PageElem};
@@ -826,7 +826,6 @@ impl Serialize for Counter {
     }
 }
 
-
 impl Serialize for CounterKey {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -835,24 +834,24 @@ impl Serialize for CounterKey {
         match self {
             CounterKey::Page => PageElem::elem().serialize(serializer),
             CounterKey::Selector(v) => v.serialize(serializer),
-            CounterKey::Str(v) => v.serialize(serializer)
+            CounterKey::Str(v) => v.serialize(serializer),
         }
     }
 }
 
-impl Serialize for CounterUpdate {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer
-    {
-        match &self { // That is so wrong... Why is `step` represented with `updated`, mother of god
-            CounterUpdate::Set(v) => v.serialize(serializer),
-            CounterUpdate::Step(v) => v.serialize(serializer),
-            CounterUpdate::Func(v) => v.serialize(serializer),
-        }
-
-    }
-}
+// impl Serialize for CounterUpdate {
+//     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+//     where
+//         S: Serializer
+//     {
+//         match &self { // That is so wrong... Why is `step` represented with `updated`, mother of god
+//             CounterUpdate::Set(v) => v.serialize(serializer),
+//             CounterUpdate::Step(v) => v.serialize(serializer),
+//             CounterUpdate::Func(v) => v.serialize(serializer),
+//         }
+//
+//     }
+// }
 
 impl IntoValue for CounterUpdate {
     fn into_value(self) -> Value {  // Permits counter update not to be internal
@@ -861,15 +860,32 @@ impl IntoValue for CounterUpdate {
             CounterUpdate::Step(v) => v.into_value(),
             CounterUpdate::Func(v) => v.into_value(),
         }
+        // // Permits counter update not to be internal
+        // let mut dict = Dict::new();
+        // match self {
+        //     CounterUpdate::Set(v) => {
+        //         dict.insert("type".into(), "set".into_value());
+        //         dict.insert("value".into(), v.into_value())
+        //     }
+        //     CounterUpdate::Step(v) => {
+        //         dict.insert("type".into(), "step".into_value());
+        //         dict.insert("value".into(), v.into_value())
+        //     }
+        //     CounterUpdate::Func(v) => {
+        //         dict.insert("type".into(), "func".into_value());
+        //         dict.insert("value".into(), v.into_value())
+        //     }
+        // };
+        // Value::Dict(dict)
     }
 }
 
-
-impl Serialize for CounterState {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer
-    {
-        self.0.serialize(serializer)
-    }
-}
+//
+// impl Serialize for CounterState {
+//     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+//     where
+//         S: Serializer
+//     {
+//         self.0.serialize(serializer)
+//     }
+// }

@@ -9,7 +9,7 @@ use crate::foundations::{
     cast, AlternativeFold, CastInfo, Dict, Fold, FromValue, IntoValue, Reflect, Resolve,
     StyleChain, Value,
 };
-use crate::layout::{Abs, Alignment, Axes, Axis, Corner, Rel, Size};
+use crate::layout::{Abs, Alignment, Axes, Axis, Corner, Margin, Rel, Size};
 
 /// A container with left, top, right and bottom components.
 #[derive(Default, Copy, Clone, Eq, PartialEq, Hash)]
@@ -207,6 +207,28 @@ where
     }
 }
 
+impl <T: Serialize + PartialEq> Serialize for Sides<Option<T>> {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer
+    {
+        if self.is_uniform() {
+            if let Some(left) = &self.left {
+                return left.serialize(serializer);
+            }
+        }
+
+        let mut map_ser = serializer.serialize_map(None)?;
+
+        if let Some(c) = &self.top { map_ser.serialize_entry("top", &c)?; }
+        if let Some(c) = &self.bottom { map_ser.serialize_entry("bottom", &c)?; }
+        if let Some(c) = &self.left { map_ser.serialize_entry("left", &c)?; }
+        if let Some(c) = &self.right { map_ser.serialize_entry("right", &c)?; }
+
+        map_ser.end()
+    }
+}
+
 impl<T> FromValue for Sides<Option<T>>
 where
     T: Default + FromValue + Clone,
@@ -341,19 +363,4 @@ cast! {
         Alignment::BOTTOM => Self::Bottom,
         _ => bail!("cannot convert this alignment to a side"),
     },
-}
-
-impl<T: Serialize> Serialize for Sides<T> {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer,
-    {
-        // Just as dictionary
-        let mut map_ser = serializer.serialize_map(Some(4))?;
-        map_ser.serialize_entry("left", &self.left)?;
-        map_ser.serialize_entry("top", &self.top)?;
-        map_ser.serialize_entry("right", &self.right)?;
-        map_ser.serialize_entry("bottom", &self.bottom)?;
-        map_ser.end()
-    }
 }

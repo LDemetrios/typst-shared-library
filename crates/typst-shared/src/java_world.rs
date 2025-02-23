@@ -1,24 +1,37 @@
 use chrono::{DateTime, Datelike, FixedOffset, Local, TimeZone, Timelike, Utc};
 
 use crate::cache_cell::CacheCell;
-use crate::extended_info::{ExtendedFileDescriptor, ExtendedFileResult};
+use crate::extended_info::{
+    ExtendedFileDescriptor, ExtendedFileResult, ExtendedWarned, Resolve,
+};
 use crate::memory_management::{
     Base16ByteArray, JavaExceptPtrResult, JavaResult, ThickBytePtr,
 };
 use parking_lot::Mutex;
 use serde::{Deserialize, Deserializer};
 use std::collections::HashMap;
+use std::io::Write;
 use std::ops::Deref;
 use std::os::raw::c_int;
 use std::path::PathBuf;
+use std::str::FromStr;
 use std::sync::OnceLock;
-use typst::diag::FileResult;
-use typst::foundations::{Bytes, Datetime, Dict};
-use typst::syntax::{FileId, Source};
+use typst::comemo::Tracked;
+use typst::diag::{bail, At, FileResult, SourceResult, StrResult};
+use typst::engine::Engine;
+use typst::foundations::{
+    Array, Bytes, Context, Datetime, Dict, IntoValue, NoneValue, Repr, Value,
+};
+use typst::model::{Numbering, NumberingPattern};
+use typst::syntax::{FileId, Source, Span};
 use typst::text::{Font, FontBook};
 use typst::utils::{tick, LazyHash, SmallBitSet};
+use typst::visualize::Color;
 use typst::{Features, Library, World};
 use typst_kit::fonts::{FontSlot, Fonts};
+use typst_library::diag::Warned;
+use typst_library::html::HtmlDocument;
+use typst_macros::func;
 
 pub type MainCallback = extern "C" fn() -> JavaResult<ExtendedFileDescriptor>;
 pub type FileCallback =
@@ -160,6 +173,13 @@ impl JavaWorld {
     }
 }
 
+#[no_mangle]
+pub extern "C" fn reset_world(world_ptr: *mut JavaWorld) {
+    let mut world = unsafe { Box::from_raw(world_ptr) };
+    world.reset();
+    let _ = Box::into_raw(world); // Not to drop the world!
+}
+
 impl World for JavaWorld {
     fn library(&self) -> &LazyHash<Library> {
         &self.library
@@ -218,10 +238,7 @@ impl World for JavaWorld {
                     tick!();
                     let jr = (self.file_callback)(descriptor);
                     tick!("{:?}", jr);
-                    let result = jr
-                        .unpack()
-                        .map(|it| it.into())
-                        .map_err(|it| it.into());
+                    let result = jr.unpack().map(|it| it.into()).map_err(|it| it.into());
                     tick!();
                     descriptor.release();
                     tick!();
@@ -283,11 +300,72 @@ pub extern "C" fn create_stdlib(features: c_int) -> *mut Library {
     tick!("{:?}", features_bitset);
     tick!("{:?}", Features(features_bitset.clone()));
 
-    let lib = Library::builder()
+    let mut lib = Library::builder()
         .with_inputs(inputs)
         .with_features(Features(features_bitset))
         .build();
+
+    // Temporary, for testing purposes.
+
+    lib.global.scope_mut().define_func::<test>();
+    lib.global.scope_mut().define_func::<test_repr>();
+    lib.global.scope_mut().define_func::<print>();
+    lib.global.scope_mut().define_func::<lines>();
+    lib.global
+        .scope_mut()
+        .define("conifer", Color::from_u8(0x9f, 0xEB, 0x52, 0xFF));
+    lib.global
+        .scope_mut()
+        .define("forest", Color::from_u8(0x43, 0xA1, 0x27, 0xFF));
+
     tick!();
 
     Box::into_raw(Box::new(lib))
+}
+
+#[func]
+fn test(lhs: Value, rhs: Value) -> StrResult<NoneValue> {
+    if lhs != rhs {
+        bail!("Assertion failed: {} != {}", lhs.repr(), rhs.repr());
+    }
+    Ok(NoneValue)
+}
+
+#[func]
+fn test_repr(lhs: Value, rhs: Value) -> StrResult<NoneValue> {
+    if lhs.repr() != rhs.repr() {
+        bail!("Assertion failed: {} != {}", lhs.repr(), rhs.repr());
+    }
+    Ok(NoneValue)
+}
+
+#[func]
+fn print(#[variadic] values: Vec<Value>) -> NoneValue {
+    let mut out = std::io::stdout().lock();
+    write!(out, "> ").unwrap();
+    for (i, value) in values.into_iter().enumerate() {
+        if i > 0 {
+            write!(out, ", ").unwrap();
+        }
+        write!(out, "{value:?}").unwrap();
+    }
+    writeln!(out).unwrap();
+    NoneValue
+}
+
+/// Generates `count` lines of text based on the numbering.
+#[func]
+fn lines(
+    engine: &mut Engine,
+    context: Tracked<Context>,
+    span: Span,
+    count: usize,
+    #[default(Numbering::Pattern(NumberingPattern::from_str("A").unwrap()))]
+    numbering: Numbering,
+) -> SourceResult<Value> {
+    (1..=count)
+        .map(|n| numbering.apply(engine, context, &[n]))
+        .collect::<SourceResult<Array>>()?
+        .join(Some('\n'.into_value()), None)
+        .at(span)
 }

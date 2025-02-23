@@ -3193,6 +3193,7 @@ dependencies = [
  "typst-eval",
  "typst-html",
  "typst-kit",
+ "typst-library",
  "typst-macros",
  "typst-pdf",
  "typst-render",

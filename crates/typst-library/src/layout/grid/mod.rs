@@ -799,7 +799,7 @@ pub(crate) fn show_grid_cell(
 }
 
 /// A value that can be configured per cell.
-#[derive(Debug, Clone, PartialEq, Hash, Serialize)]
+#[derive(Debug, Clone, PartialEq, Hash)]
 pub enum Celled<T> {
     /// A bare value, the same for all cells.
     Value(T),
@@ -932,5 +932,18 @@ where
                 .cloned()
                 .unwrap_or_default(),
         })
+    }
+}
+
+impl <T : Serialize> Serialize for Celled<T> {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer
+    {
+     match self {
+         Celled::Value(v) => v.serialize(serializer),
+         Celled::Func(f) => f.serialize(serializer),
+         Celled::Array(a) => a.serialize(serializer),
+     }
     }
 }
