@@ -18,6 +18,7 @@ use std::str::FromStr;
 use std::sync::OnceLock;
 use typst::comemo::Tracked;
 use typst::diag::{bail, At, FileResult, SourceResult, StrResult};
+use typst::ecow::EcoString;
 use typst::engine::Engine;
 use typst::foundations::{
     Array, Bytes, Context, Datetime, Dict, IntoValue, NoneValue, Repr, Value,
@@ -28,9 +29,12 @@ use typst::text::{Font, FontBook};
 use typst::utils::{tick, LazyHash, SmallBitSet};
 use typst::visualize::Color;
 use typst::{Features, Library, World};
+use typst_eval::eval_string;
 use typst_kit::fonts::{FontSlot, Fonts};
 use typst_library::diag::Warned;
+use typst_library::foundations::{LocatableSelector, Scope};
 use typst_library::html::HtmlDocument;
+use typst_library::routines::EvalMode;
 use typst_macros::func;
 
 pub type MainCallback = extern "C" fn() -> JavaResult<ExtendedFileDescriptor>;
@@ -42,22 +46,22 @@ pub type FileCallback =
 /// and JavaWorld is stored and accessed by Pointer
 pub struct JavaWorld {
     /// Typst's standard library.
-    library: LazyHash<Library>,
+    pub(crate) library: LazyHash<Library>,
     /// Metadata about discovered fonts. TODO make java-compatible
-    book: LazyHash<FontBook>,
+    pub(crate) book: LazyHash<FontBook>,
     /// Callback for World::book method.
     /// Returns c-style string representing a path to a main file.
-    main_callback: MainCallback,
+    pub(crate) main_callback: MainCallback,
     /// Callback for World::file method.
     /// Accepts package: Option<PackageSpec> and path: VirtualPath
     /// Return FileResult<Bytes>
-    file_callback: FileCallback,
+    pub(crate) file_callback: FileCallback,
     /// Fonts, handled as in SystemWorld. TODO make java-compatible
-    fonts: Vec<FontSlot>,
+    pub(crate) fonts: Vec<FontSlot>,
     /// File cache
-    files: Mutex<HashMap<FileId, FileCache>>,
+    pub(crate) files: Mutex<HashMap<FileId, FileCache>>,
     /// Now, handled as in SystemWorld
-    now: Option<Now>,
+    pub(crate) now: Option<Now>,
 }
 
 pub enum Now {
@@ -284,88 +288,3 @@ fn decode_utf8(buf: &[u8]) -> FileResult<&str> {
     Ok(std::str::from_utf8(buf.strip_prefix(b"\xef\xbb\xbf").unwrap_or(buf))?)
 }
 
-#[no_mangle]
-pub extern "C" fn create_stdlib(features: c_int) -> *mut Library {
-    tick!("{:?}", features);
-    let inputs: Dict = Dict::new();
-    tick!();
-
-    let mut features_bitset = SmallBitSet::default();
-    tick!();
-    for i in 0..1 {
-        if features >> i & 1 == 1 {
-            features_bitset.insert(i as usize)
-        }
-    }
-    tick!("{:?}", features_bitset);
-    tick!("{:?}", Features(features_bitset.clone()));
-
-    let mut lib = Library::builder()
-        .with_inputs(inputs)
-        .with_features(Features(features_bitset))
-        .build();
-
-    // Temporary, for testing purposes.
-
-    lib.global.scope_mut().define_func::<test>();
-    lib.global.scope_mut().define_func::<test_repr>();
-    lib.global.scope_mut().define_func::<print>();
-    lib.global.scope_mut().define_func::<lines>();
-    lib.global
-        .scope_mut()
-        .define("conifer", Color::from_u8(0x9f, 0xEB, 0x52, 0xFF));
-    lib.global
-        .scope_mut()
-        .define("forest", Color::from_u8(0x43, 0xA1, 0x27, 0xFF));
-
-    tick!();
-
-    Box::into_raw(Box::new(lib))
-}
-
-#[func]
-fn test(lhs: Value, rhs: Value) -> StrResult<NoneValue> {
-    if lhs != rhs {
-        bail!("Assertion failed: {} != {}", lhs.repr(), rhs.repr());
-    }
-    Ok(NoneValue)
-}
-
-#[func]
-fn test_repr(lhs: Value, rhs: Value) -> StrResult<NoneValue> {
-    if lhs.repr() != rhs.repr() {
-        bail!("Assertion failed: {} != {}", lhs.repr(), rhs.repr());
-    }
-    Ok(NoneValue)
-}
-
-#[func]
-fn print(#[variadic] values: Vec<Value>) -> NoneValue {
-    let mut out = std::io::stdout().lock();
-    write!(out, "> ").unwrap();
-    for (i, value) in values.into_iter().enumerate() {
-        if i > 0 {
-            write!(out, ", ").unwrap();
-        }
-        write!(out, "{value:?}").unwrap();
-    }
-    writeln!(out).unwrap();
-    NoneValue
-}
-
-/// Generates `count` lines of text based on the numbering.
-#[func]
-fn lines(
-    engine: &mut Engine,
-    context: Tracked<Context>,
-    span: Span,
-    count: usize,
-    #[default(Numbering::Pattern(NumberingPattern::from_str("A").unwrap()))]
-    numbering: Numbering,
-) -> SourceResult<Value> {
-    (1..=count)
-        .map(|n| numbering.apply(engine, context, &[n]))
-        .collect::<SourceResult<Array>>()?
-        .join(Some('\n'.into_value()), None)
-        .at(span)
-}

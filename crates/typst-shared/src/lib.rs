@@ -9,3 +9,4 @@ pub mod compile;
 pub mod exception;
 pub mod memory_management;
 pub mod extended_info;
+pub mod stdlib;
