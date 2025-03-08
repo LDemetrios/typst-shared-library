@@ -1565,7 +1565,7 @@ mod tests {
             self.completions().iter().map(|c| c.label.as_str()).collect()
         }
 
-       //  #[track_caller]
+         #[track_caller]
         fn must_include<'a>(&self, includes: impl IntoIterator<Item = &'a str>) -> &Self {
             let labels = self.labels();
             for item in includes {
@@ -1577,7 +1577,7 @@ mod tests {
             self
         }
 
-       //  #[track_caller]
+         #[track_caller]
         fn must_exclude<'a>(&self, excludes: impl IntoIterator<Item = &'a str>) -> &Self {
             let labels = self.labels();
             for item in excludes {
@@ -1589,7 +1589,7 @@ mod tests {
             self
         }
 
-       //  #[track_caller]
+         #[track_caller]
         fn must_apply<'a>(
             &self,
             label: &str,
@@ -1604,7 +1604,7 @@ mod tests {
         }
     }
 
-   //  #[track_caller]
+     #[track_caller]
     fn test(world: impl WorldLike, pos: impl FilePos) -> Response {
         let world = world.acquire();
         let world = world.borrow();
@@ -1612,7 +1612,7 @@ mod tests {
         test_with_doc(world, pos, doc.as_ref())
     }
 
-   //  #[track_caller]
+     #[track_caller]
     fn test_with_doc(
         world: impl WorldLike,
         pos: impl FilePos,

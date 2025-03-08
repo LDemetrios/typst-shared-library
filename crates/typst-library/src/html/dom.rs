@@ -114,7 +114,7 @@ impl HtmlTag {
     /// Creates a compile-time constant `HtmlTag`.
     ///
     /// Should only be used in const contexts because it can panic.
-   //  #[track_caller]
+     #[track_caller]
     pub const fn constant(string: &'static str) -> Self {
         if string.is_empty() {
             panic!("tag name must not be empty");
@@ -224,7 +224,7 @@ impl HtmlAttr {
     /// explicit `const { .. }` block) because otherwise a panic for a malformed
     /// attribute or not auto-internible constant will only be caught at
     /// runtime.
-   //  #[track_caller]
+     #[track_caller]
     pub const fn constant(string: &'static str) -> Self {
         if string.is_empty() {
             panic!("attribute name must not be empty");

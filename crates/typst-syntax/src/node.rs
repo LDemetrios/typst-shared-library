@@ -42,7 +42,7 @@ impl SyntaxNode {
     /// Create a dummy node of the given kind.
     ///
     /// Panics if `kind` is `SyntaxKind::Error`.
-   //  #[track_caller]
+     #[track_caller]
     pub const fn placeholder(kind: SyntaxKind) -> Self {
         if matches!(kind, SyntaxKind::Error) {
             panic!("cannot create error placeholder");

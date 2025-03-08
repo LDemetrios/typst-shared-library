@@ -422,7 +422,7 @@ fn control_point(c: Point, r: f32, angle_start: f32, angle_end: f32) -> (Point, 
     (p1, p2)
 }
 
-// #[comemo::memoize]
+ #[comemo::memoize]
 fn compute_vertex_stream(gradient: &Gradient, aspect_ratio: Ratio) -> Arc<Vec<u8>> {
     let Gradient::Conic(conic) = gradient else { unreachable!() };
 

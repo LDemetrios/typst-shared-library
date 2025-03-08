@@ -475,7 +475,7 @@ mod tests {
         assert_ne!(hash128(&a), hash128(&b));
     }
 
-   //  #[track_caller]
+     #[track_caller]
     fn test_round(value: &str, digits: i32, expected: &str) {
         assert_eq!(
             Decimal::from_str(value).unwrap().round(digits),

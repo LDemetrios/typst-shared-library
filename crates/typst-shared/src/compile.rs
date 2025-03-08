@@ -7,6 +7,7 @@ use typst::diag::{eco_format, Warned};
 use typst::foundations::Datetime;
 use typst::html::HtmlDocument;
 use typst::layout::{Page, PagedDocument};
+use typst::utils::tick;
 
 #[no_mangle]
 pub extern "C" fn compile_html(
@@ -53,22 +54,32 @@ fn compile_images<T: Serialize>(
     to: i32,
     extractor: impl Fn(&Page) -> T,
 ) -> JavaResult<ExtendedWarned<Result<Vec<T>, Vec<ExtendedSourceDiagnostic>>>> {
+    tick!();
     let world = unsafe { Box::from_raw(world_ptr) };
+    tick!();
     let Warned { output, warnings } = typst::compile::<PagedDocument>(world.as_ref());
+    tick!();
     let pages = output.map(|document| {
+        tick!();
         let mut doc_pages = document.pages;
+        tick!();
         let start = (from as usize).min(doc_pages.len());
+        tick!();
         let end = (to as usize).min(doc_pages.len());
+        tick!();
         doc_pages
             .drain(start..end)
             .map(|it| extractor(&it))
             .collect::<Vec<_>>()
     });
+    tick!();
     let result = ExtendedWarned {
         output: pages.map_err(|it| it.resolve(world.as_ref())),
         warnings: warnings.resolve(world.as_ref()),
     };
+    tick!();
     let _ = Box::into_raw(world); // Not to drop the world!
+    tick!();
     JavaResult::pack(result)
 }
 

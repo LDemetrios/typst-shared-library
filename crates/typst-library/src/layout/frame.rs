@@ -36,7 +36,7 @@ impl Frame {
     /// Create a new, empty frame.
     ///
     /// Panics the size is not finite.
-   //  #[track_caller]
+     #[track_caller]
     pub fn new(size: Size, kind: FrameKind) -> Self {
         assert!(size.is_finite());
         Self {
@@ -50,7 +50,7 @@ impl Frame {
     /// Create a new, empty soft frame.
     ///
     /// Panics if the size is not finite.
-   //  #[track_caller]
+     #[track_caller]
     pub fn soft(size: Size) -> Self {
         Self::new(size, FrameKind::Soft)
     }
@@ -58,7 +58,7 @@ impl Frame {
     /// Create a new, empty hard frame.
     ///
     /// Panics if the size is not finite.
-   //  #[track_caller]
+     #[track_caller]
     pub fn hard(size: Size) -> Self {
         Self::new(size, FrameKind::Hard)
     }
@@ -183,7 +183,7 @@ impl Frame {
     /// Insert an item at the given layer in the frame.
     ///
     /// This panics if the layer is greater than the number of layers present.
-   //  #[track_caller]
+     #[track_caller]
     pub fn insert(&mut self, layer: usize, pos: Point, item: FrameItem) {
         Arc::make_mut(&mut self.items).insert(layer, (pos, item));
     }

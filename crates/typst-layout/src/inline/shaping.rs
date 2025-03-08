@@ -903,7 +903,7 @@ fn shape_segment<'a>(
 }
 
 /// Create a shape plan.
-// #[comemo::memoize]
+ #[comemo::memoize]
 fn create_shape_plan(
     font: &Font,
     direction: rustybuzz::Direction,

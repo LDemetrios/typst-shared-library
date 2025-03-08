@@ -272,7 +272,7 @@ pub trait LocalName {
 /// Silently falls back to English if no fitting string exists for
 /// the given language + region. Panics if no fitting string exists
 /// in both given language + region and English.
-// #[comemo::memoize]
+ #[comemo::memoize]
 pub fn localized_str(lang: Lang, region: Option<Region>, key: &str) -> &'static str {
     let lang_region_bundle = parse_language_bundle(lang, region).unwrap();
     if let Some(str) = lang_region_bundle.get(key) {
@@ -288,7 +288,7 @@ pub fn localized_str(lang: Lang, region: Option<Region>, key: &str) -> &'static 
 
 /// Parses the translation file for a given language and region.
 /// Only returns an error if the language file is malformed.
-// #[comemo::memoize]
+ #[comemo::memoize]
 fn parse_language_bundle(
     lang: Lang,
     region: Option<Region>,

@@ -715,7 +715,7 @@ fn compute_auto_indents(
 /// Determines the maximum prefix inset (prefix width + gap) at each outline
 /// level, for the outline with the given `loc`. Levels for which there is no
 /// information available yield `None`.
-// #[comemo::memoize]
+ #[comemo::memoize]
 fn query_prefix_widths(
     introspector: Tracked<Introspector>,
     outline_loc: Location,

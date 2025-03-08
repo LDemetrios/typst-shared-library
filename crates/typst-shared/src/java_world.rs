@@ -1,8 +1,10 @@
 use chrono::{DateTime, Datelike, FixedOffset, Local, TimeZone, Timelike, Utc};
 
 use crate::cache_cell::CacheCell;
+use crate::download;
+use crate::download::PrintDownload;
 use crate::extended_info::{
-    ExtendedFileDescriptor, ExtendedFileResult, ExtendedWarned, Resolve,
+    ExtendedFileDescriptor, ExtendedFileResult, Resolve,
 };
 use crate::memory_management::{
     Base16ByteArray, JavaExceptPtrResult, JavaResult, ThickBytePtr,
@@ -10,32 +12,23 @@ use crate::memory_management::{
 use parking_lot::Mutex;
 use serde::{Deserialize, Deserializer};
 use std::collections::HashMap;
-use std::io::Write;
+use std::fs;
 use std::ops::Deref;
-use std::os::raw::c_int;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::str::FromStr;
 use std::sync::OnceLock;
-use typst::comemo::Tracked;
-use typst::diag::{bail, At, FileResult, SourceResult, StrResult};
-use typst::ecow::EcoString;
-use typst::engine::Engine;
+use typst::diag::FileResult;
 use typst::foundations::{
-    Array, Bytes, Context, Datetime, Dict, IntoValue, NoneValue, Repr, Value,
+    Bytes, Datetime,
 };
-use typst::model::{Numbering, NumberingPattern};
-use typst::syntax::{FileId, Source, Span};
+use typst::syntax::package::PackageSpec;
+use typst::syntax::{FileId, Source};
 use typst::text::{Font, FontBook};
-use typst::utils::{tick, LazyHash, SmallBitSet};
-use typst::visualize::Color;
-use typst::{Features, Library, World};
-use typst_eval::eval_string;
+use typst::utils::{tick, LazyHash};
+use typst::{Library, World};
 use typst_kit::fonts::{FontSlot, Fonts};
-use typst_library::diag::Warned;
-use typst_library::foundations::{LocatableSelector, Scope};
-use typst_library::html::HtmlDocument;
-use typst_library::routines::EvalMode;
-use typst_macros::func;
+use typst_kit::package::PackageStorage;
+use typst_library::diag::FileError;
 
 pub type MainCallback = extern "C" fn() -> JavaResult<ExtendedFileDescriptor>;
 pub type FileCallback =
@@ -62,6 +55,9 @@ pub struct JavaWorld {
     pub(crate) files: Mutex<HashMap<FileId, FileCache>>,
     /// Now, handled as in SystemWorld
     pub(crate) now: Option<Now>,
+    /// Package storage, handled as in SystemWorld
+    pub(crate) package_storage: Option<PackageStorage>,
+    pub auto_load_central: bool,
 }
 
 pub enum Now {
@@ -116,6 +112,7 @@ pub extern "C" fn new_world(
     main_callback: MainCallback,
     file_callback: FileCallback,
     now: JavaResult<Option<Now>>,
+    auto_load_central: i32, // 1 -- true, 0 -- false
 ) -> JavaExceptPtrResult<JavaWorld> {
     tick!();
     let library = unsafe { Box::from_raw(library) }.deref().clone();
@@ -126,6 +123,9 @@ pub extern "C" fn new_world(
         .search_with(&(vec![] as Vec<PathBuf>));
     tick!();
 
+    let package_cache_path: Option<PathBuf> = None;
+    let package_path: Option<PathBuf> = None;
+
     let java_world = JavaWorld {
         library: LazyHash::new(library),
         book: LazyHash::new(fonts.book),
@@ -134,6 +134,12 @@ pub extern "C" fn new_world(
         fonts: fonts.fonts,
         files: Mutex::new(HashMap::new()),
         now: now.unpack().into(),
+        package_storage: Some(PackageStorage::new(
+            package_cache_path.clone(),
+            package_path.clone(),
+            download::downloader(),
+        )),
+        auto_load_central: auto_load_central == 1,
     };
     tick!();
     JavaExceptPtrResult::pack(Ok(Box::into_raw(Box::new(java_world))))
@@ -175,6 +181,44 @@ impl JavaWorld {
             locked.take();
         }
     }
+
+    pub fn obtain_file(&self, id: FileId) -> FileResult<Vec<u8>> {
+        let custom: bool;
+
+        if let Some(pack) = id.package() {
+            let PackageSpec { namespace, .. } = pack;
+            custom = !namespace.to_string().eq(&"preview".to_string());
+        } else {
+            custom = true
+        }
+
+        if custom {
+            let descriptor: ThickBytePtr =
+                serde_json::to_string(&ExtendedFileDescriptor::from(id))
+                    .unwrap()
+                    .into();
+            tick!();
+            let jr = (self.file_callback)(descriptor);
+            tick!("{:?}", jr);
+            let result =
+                jr.unpack().map(|it| it.into()).map_err(|it| it.into());
+            tick!();
+            descriptor.release();
+            tick!();
+            result
+        } else {
+            let spec = id.package().unwrap();
+            let buf = self
+                .package_storage
+                .as_ref()
+                .unwrap()
+                .prepare_package(spec, &mut PrintDownload(&spec))?;
+            let mut root = &buf;
+            let path =
+                id.vpath().resolve(root).ok_or(FileError::AccessDenied);
+            read_from_disk(&path?)
+        }
+    }
 }
 
 #[no_mangle]
@@ -203,19 +247,7 @@ impl World for JavaWorld {
         self.cell(id, |it| {
             it.source.get_or_init(
                 || {
-                    tick!();
-                    let descriptor: ThickBytePtr =
-                        serde_json::to_string(&ExtendedFileDescriptor::from(id))
-                            .unwrap()
-                            .into();
-                    tick!();
-                    let result = (self.file_callback)(descriptor)
-                        .unpack()
-                        .map(|it| it.into())
-                        .map_err(|it| it.into());
-                    tick!();
-                    descriptor.release();
-                    result
+                    self.obtain_file(id)
                 },
                 |data, prev| {
                     let text = decode_utf8(&data)?;
@@ -235,18 +267,7 @@ impl World for JavaWorld {
         self.cell(id, |it| {
             it.file.get_or_init(
                 || {
-                    let descriptor: ThickBytePtr =
-                        serde_json::to_string(&ExtendedFileDescriptor::from(id))
-                            .unwrap()
-                            .into();
-                    tick!();
-                    let jr = (self.file_callback)(descriptor);
-                    tick!("{:?}", jr);
-                    let result = jr.unpack().map(|it| it.into()).map_err(|it| it.into());
-                    tick!();
-                    descriptor.release();
-                    tick!();
-                    result
+                    self.obtain_file(id)
                 },
                 |data, _| Ok(Bytes::new(data)),
             )
@@ -288,3 +309,11 @@ fn decode_utf8(buf: &[u8]) -> FileResult<&str> {
     Ok(std::str::from_utf8(buf.strip_prefix(b"\xef\xbb\xbf").unwrap_or(buf))?)
 }
 
+fn read_from_disk(path: &Path) -> FileResult<Vec<u8>> {
+    let f = |e| FileError::from_io(e, path);
+    if fs::metadata(path).map_err(f)?.is_dir() {
+        Err(FileError::IsDirectory)
+    } else {
+        fs::read(path).map_err(f)
+    }
+}

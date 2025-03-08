@@ -72,7 +72,7 @@ impl Display for DurationDisplay {
 mod tests {
     use super::*;
 
-   //  #[track_caller]
+     #[track_caller]
     fn test(duration: Duration, expected: &str) {
         assert_eq!(format_duration(duration).to_string(), expected);
     }

@@ -182,7 +182,7 @@ impl SystemWorld {
     }
 
     /// Lookup a source file by id.
-   //  #[track_caller]
+     #[track_caller]
     pub fn lookup(&self, id: FileId) -> Source {
         self.source(id).expect("file id does not point to any source file")
     }

@@ -310,7 +310,7 @@ impl Synthesize for Packed<RawElem> {
 }
 
 impl Packed<RawElem> {
-    // #[comemo::memoize]
+     #[comemo::memoize]
     fn highlight(&self, styles: StyleChain) -> Vec<Packed<RawLine>> {
         let elem = self.as_ref();
         let lines = preprocess(&elem.text, styles, self.span());
@@ -552,7 +552,7 @@ impl RawSyntax {
     }
 
     /// Decode a syntax from a loaded source.
-    // #[comemo::memoize]
+     #[comemo::memoize]
     #[typst_macros::time(name = "load syntaxes")]
     fn decode(source: &DataSource, data: &Bytes) -> StrResult<RawSyntax> {
         let src = data.as_str().map_err(FileError::from)?;
@@ -598,7 +598,7 @@ impl RawTheme {
     }
 
     /// Decode a theme from bytes.
-    // #[comemo::memoize]
+     #[comemo::memoize]
     fn decode(data: &Bytes) -> StrResult<RawTheme> {
         let mut cursor = std::io::Cursor::new(data.as_slice());
         let theme = synt::ThemeSet::load_from_reader(&mut cursor)

@@ -35,7 +35,7 @@ impl SVGRenderer {
 
 /// Encode an image into a data URL. The format of the URL is
 /// `data:image/{format};base64,`.
-// #[comemo::memoize]
+ #[comemo::memoize]
 pub fn convert_image_to_base64_url(image: &Image) -> EcoString {
     let mut buf;
     let (format, data): (&str, &[u8]) = match image.kind() {

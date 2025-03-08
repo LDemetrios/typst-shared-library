@@ -1487,7 +1487,7 @@ impl<'a> CellGrid<'a> {
     /// Get the grid entry in column `x` and row `y`.
     ///
     /// Returns `None` if it's a gutter cell.
-   //  #[track_caller]
+     #[track_caller]
     pub fn entry(&self, x: usize, y: usize) -> Option<&Entry<'a>> {
         assert!(x < self.cols.len());
         assert!(y < self.rows.len());
@@ -1509,7 +1509,7 @@ impl<'a> CellGrid<'a> {
     /// Get the content of the cell in column `x` and row `y`.
     ///
     /// Returns `None` if it's a gutter cell or merged position.
-   //  #[track_caller]
+     #[track_caller]
     pub fn cell(&self, x: usize, y: usize) -> Option<&Cell<'a>> {
         self.entry(x, y).and_then(Entry::as_cell)
     }
@@ -1521,7 +1521,7 @@ impl<'a> CellGrid<'a> {
     ///   position.
     /// - If it is a merged cell, returns the parent cell's position.
     /// - If it is a gutter cell, returns None.
-   //  #[track_caller]
+     #[track_caller]
     pub fn parent_cell_position(&self, x: usize, y: usize) -> Option<Axes<usize>> {
         self.entry(x, y).map(|entry| match entry {
             Entry::Cell(_) => Axes::new(x, y),
@@ -1549,7 +1549,7 @@ impl<'a> CellGrid<'a> {
     /// getting the position of that cell (which spans the given gutter
     /// position, if it is gutter), if it exists; otherwise returns None (it's
     /// gutter and no cell spans it).
-   //  #[track_caller]
+     #[track_caller]
     pub fn effective_parent_cell_position(
         &self,
         x: usize,

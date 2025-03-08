@@ -57,7 +57,7 @@ pub fn render_image(
 }
 
 /// Prepare a texture for an image at a scaled size.
-// #[comemo::memoize]
+ #[comemo::memoize]
 fn build_texture(image: &Image, w: u32, h: u32) -> Option<Arc<sk::Pixmap>> {
     let mut texture = sk::Pixmap::new(w, h)?;
     match image.kind() {

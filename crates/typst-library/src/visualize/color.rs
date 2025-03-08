@@ -1969,7 +1969,7 @@ mod tests {
 
     #[test]
     fn test_parse_color_strings() {
-       //  #[track_caller]
+         #[track_caller]
         fn test(hex: &str, r: u8, g: u8, b: u8, a: u8) {
             assert_eq!(Color::from_str(hex), Ok(Color::from_u8(r, g, b, a)));
         }
@@ -1983,7 +1983,7 @@ mod tests {
 
     #[test]
     fn test_parse_invalid_colors() {
-       //  #[track_caller]
+         #[track_caller]
         fn test(hex: &str, message: &str) {
             assert_eq!(Color::from_str(hex), Err(message));
         }

@@ -153,7 +153,7 @@ impl SVGRenderer {
 }
 
 /// Convert a geometry to an SVG path.
-// #[comemo::memoize]
+ #[comemo::memoize]
 fn convert_geometry_to_path(geometry: &Geometry) -> EcoString {
     let mut builder = SvgPathBuilder::default();
     match geometry {

@@ -65,6 +65,8 @@ fn eval_no_world(string: &str) -> Value {
         fonts: fonts.fonts,
         files: Mutex::new(HashMap::new()),
         now: None,
+        package_storage: None,
+        auto_load_central: false,
     };
 
     eval_with_world(string, &java_world)

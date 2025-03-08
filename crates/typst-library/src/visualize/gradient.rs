@@ -1228,7 +1228,7 @@ cast! {
 ///
 /// This is split into its own function because it is used by all of the
 /// different gradient types.
-// #[comemo::memoize]
+ #[comemo::memoize]
 fn process_stops(stops: &[Spanned<GradientStop>]) -> SourceResult<Vec<(Color, Ratio)>> {
     let has_offset = stops.iter().any(|stop| stop.v.offset.is_some());
     if has_offset {

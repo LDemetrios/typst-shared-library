@@ -242,7 +242,7 @@ mod tests {
 
     use crate::{parse, Source, Span};
 
-   //  #[track_caller]
+     #[track_caller]
     fn test(prev: &str, range: Range<usize>, with: &str, incremental: bool) {
         let mut source = Source::detached(prev);
         let prev = source.root().clone();

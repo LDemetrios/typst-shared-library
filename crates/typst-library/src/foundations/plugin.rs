@@ -223,14 +223,14 @@ impl PluginFunc {
     }
 
     /// Call the WebAssembly function with the given arguments.
-    // #[comemo::memoize]
+     #[comemo::memoize]
     #[typst_macros::time(name = "call plugin")]
     pub fn call(&self, args: Vec<Bytes>) -> StrResult<Bytes> {
         self.plugin.call(&self.name, args)
     }
 
     /// Transition a plugin and turn the result into a module.
-    // #[comemo::memoize]
+     #[comemo::memoize]
     #[typst_macros::time(name = "transition plugin")]
     pub fn transition(&self, args: Vec<Bytes>) -> StrResult<Module> {
         self.plugin.transition(&self.name, args).map(Plugin::into_module)
@@ -264,7 +264,7 @@ pub struct Plugin {
 
 impl Plugin {
     /// Create a plugin and turn it into a module.
-    // #[comemo::memoize]
+     #[comemo::memoize]
     #[typst_macros::time(name = "load plugin")]
     fn module(bytes: Bytes) -> StrResult<Module> {
         Self::new(bytes).map(Self::into_module)

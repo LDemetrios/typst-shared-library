@@ -68,7 +68,7 @@ impl PicoStr {
     /// Creates a compile-time constant `PicoStr`.
     ///
     /// Should only be used in const contexts because it can panic.
-   //  #[track_caller]
+     #[track_caller]
     pub const fn constant(string: &'static str) -> PicoStr {
         match PicoStr::try_constant(string) {
             Ok(value) => value,
@@ -363,7 +363,7 @@ impl Hash for ResolvedPicoStr {
 mod tests {
     use super::*;
 
-   //  #[track_caller]
+     #[track_caller]
     fn roundtrip(s: &str) {
         assert_eq!(PicoStr::intern(s).resolve().as_str(), s);
     }
