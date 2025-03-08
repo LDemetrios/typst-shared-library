@@ -228,7 +228,7 @@ pub enum RenderedGlyph {
 }
 
 /// Convert an outline glyph to an SVG path.
-// #[comemo::memoize]
+ #[comemo::memoize]
 fn convert_outline_glyph_to_path(
     font: &Font,
     id: GlyphId,
@@ -240,7 +240,7 @@ fn convert_outline_glyph_to_path(
 }
 
 /// Convert a bitmap glyph to an encoded image URL.
-// #[comemo::memoize]
+ #[comemo::memoize]
 fn convert_bitmap_glyph_to_image(font: &Font, id: GlyphId) -> Option<(Image, f64, f64)> {
     let raster = font.ttf().glyph_raster_image(id, u16::MAX)?;
     if raster.format != ttf_parser::RasterImageFormat::PNG {
@@ -253,7 +253,7 @@ fn convert_bitmap_glyph_to_image(font: &Font, id: GlyphId) -> Option<(Image, f64
 }
 
 /// Convert an SVG glyph to an encoded image URL.
-// #[comemo::memoize]
+ #[comemo::memoize]
 fn convert_svg_glyph_to_base64_url(font: &Font, id: GlyphId) -> Option<EcoString> {
     let mut data = font.ttf().glyph_svg_image(id)?.data;
 

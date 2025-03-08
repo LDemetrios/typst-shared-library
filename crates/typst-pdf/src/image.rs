@@ -121,7 +121,7 @@ pub fn write_images(
 /// Creates a new PDF image from the given image.
 ///
 /// Also starts the deferred encoding of the image.
-// #[comemo::memoize]
+ #[comemo::memoize]
 pub fn deferred_image(
     image: Image,
     pdfa: bool,

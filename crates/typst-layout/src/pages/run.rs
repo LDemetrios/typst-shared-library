@@ -71,7 +71,7 @@ pub fn layout_page_run(
 }
 
 /// The internal implementation of `layout_page_run`.
-// #[comemo::memoize]
+ #[comemo::memoize]
 #[allow(clippy::too_many_arguments)]
 fn layout_page_run_impl(
     routines: &Routines,

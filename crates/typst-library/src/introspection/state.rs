@@ -220,7 +220,7 @@ impl State {
     }
 
     /// Memoized implementation of `sequence`.
-    // #[comemo::memoize]
+     #[comemo::memoize]
     fn sequence_impl(
         &self,
         routines: &Routines,

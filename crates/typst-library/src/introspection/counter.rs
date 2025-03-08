@@ -12,8 +12,8 @@ use typst_utils::NonZeroExt;
 use crate::diag::{bail, At, HintedStrResult, SourceResult};
 use crate::engine::{Engine, Route, Sink, Traced};
 use crate::foundations::{
-    cast, elem, func, scope, select_where, ty, Args, Array, Construct, Content, Context,
-    Dict, Element, Func, IntoValue, Label, LocatableSelector, NativeElement, Packed,
+    cast, elem, func, scope, select_where, ty, Args, Array, Construct, Content, Context
+    , Element, Func, IntoValue, Label, LocatableSelector, NativeElement, Packed,
     Repr, Selector, Show, Smart, Str, StyleChain, Value,
 };
 use crate::introspection::{Introspector, Locatable, Location, Tag};
@@ -291,7 +291,7 @@ impl Counter {
     }
 
     /// Memoized implementation of `sequence`.
-    // #[comemo::memoize]
+     #[comemo::memoize]
     fn sequence_impl(
         &self,
         routines: &Routines,

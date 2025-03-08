@@ -110,7 +110,7 @@ impl Source {
     /// Returns the range in the new source that was ultimately reparsed.
     ///
     /// The method panics if the `replace` range is out of bounds.
-   //  #[track_caller]
+     #[track_caller]
     pub fn edit(&mut self, replace: Range<usize>, with: &str) -> Range<usize> {
         let start_byte = replace.start;
         let start_utf16 = self.byte_to_utf16(start_byte).unwrap();
@@ -367,7 +367,7 @@ mod tests {
 
     #[test]
     fn test_source_file_utf16() {
-       //  #[track_caller]
+         #[track_caller]
         fn roundtrip(source: &Source, byte_idx: usize, utf16_idx: usize) {
             let middle = source.byte_to_utf16(byte_idx).unwrap();
             let result = source.utf16_to_byte(middle).unwrap();
@@ -388,7 +388,7 @@ mod tests {
 
     #[test]
     fn test_source_file_roundtrip() {
-       //  #[track_caller]
+         #[track_caller]
         fn roundtrip(source: &Source, byte_idx: usize) {
             let line = source.byte_to_line(byte_idx).unwrap();
             let column = source.byte_to_column(byte_idx).unwrap();
@@ -407,7 +407,7 @@ mod tests {
     fn test_source_file_edit() {
         // This tests only the non-parser parts. The reparsing itself is
         // tested separately.
-       //  #[track_caller]
+         #[track_caller]
         fn test(prev: &str, range: Range<usize>, with: &str, after: &str) {
             let reference = Source::detached(after);
 

@@ -138,7 +138,7 @@ pub fn to_sk_paint<'a>(
     gradient_map: Option<(Point, Axes<Ratio>)>,
 ) -> sk::Paint<'a> {
     /// Actual sampling of the gradient, cached for performance.
-    // #[comemo::memoize]
+     #[comemo::memoize]
     fn cached(
         gradient: &Gradient,
         width: u32,

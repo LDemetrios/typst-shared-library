@@ -45,7 +45,7 @@ pub fn layout_document(
 }
 
 /// The internal implementation of `layout_document`.
-// #[comemo::memoize]
+ #[comemo::memoize]
 #[allow(clippy::too_many_arguments)]
 fn layout_document_impl(
     routines: &Routines,

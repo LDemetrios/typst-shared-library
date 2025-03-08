@@ -293,7 +293,7 @@ impl Image {
 
     /// The internal, non-generic implementation. This is memoized to reuse
     /// the `Arc` and `LazyHash`.
-    // #[comemo::memoize]
+     #[comemo::memoize]
     fn new_impl(
         kind: ImageKind,
         alt: Option<EcoString>,

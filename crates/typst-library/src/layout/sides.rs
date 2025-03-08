@@ -1,7 +1,7 @@
+use serde::ser::SerializeMap;
+use serde::{Serialize, Serializer};
 use std::fmt::{self, Debug, Formatter};
 use std::ops::Add;
-use serde::{Serialize, Serializer};
-use serde::ser::SerializeMap;
 use typst_utils::Get;
 
 use crate::diag::{bail, HintedStrResult};
@@ -9,7 +9,7 @@ use crate::foundations::{
     cast, AlternativeFold, CastInfo, Dict, Fold, FromValue, IntoValue, Reflect, Resolve,
     StyleChain, Value,
 };
-use crate::layout::{Abs, Alignment, Axes, Axis, Corner, Margin, Rel, Size};
+use crate::layout::{Abs, Alignment, Axes, Axis, Corner, Rel, Size};
 
 /// A container with left, top, right and bottom components.
 #[derive(Default, Copy, Clone, Eq, PartialEq, Hash)]

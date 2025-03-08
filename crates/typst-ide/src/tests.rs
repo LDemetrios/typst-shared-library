@@ -45,13 +45,13 @@ impl TestWorld {
     }
 
     /// Add an additional asset file to the test world.
-   //  #[track_caller]
+     #[track_caller]
     pub fn with_asset(self, filename: &str) -> Self {
         self.with_asset_at(filename, filename)
     }
 
     /// Add an additional asset file to the test world.
-   //  #[track_caller]
+     #[track_caller]
     pub fn with_asset_at(mut self, path: &str, filename: &str) -> Self {
         let id = FileId::new(None, VirtualPath::new(path));
         let data = typst_dev_assets::get_by_name(filename).unwrap();
@@ -208,14 +208,14 @@ pub trait FilePos {
 }
 
 impl FilePos for isize {
-   //  #[track_caller]
+     #[track_caller]
     fn resolve(self, world: &TestWorld) -> (Source, usize) {
         (world.main.clone(), cursor(&world.main, self))
     }
 }
 
 impl FilePos for (&str, isize) {
-   //  #[track_caller]
+     #[track_caller]
     fn resolve(self, world: &TestWorld) -> (Source, usize) {
         let id = FileId::new(None, VirtualPath::new(self.0));
         let source = world.source(id).unwrap();

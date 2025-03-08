@@ -33,7 +33,7 @@ impl FileId {
     ///
     /// The path must start with a `/` or this function will panic.
     /// Note that the path is normalized before interning.
-   //  #[track_caller]
+     #[track_caller]
     pub fn new(package: Option<PackageSpec>, path: VirtualPath) -> Self {
         // Try to find an existing entry that we can reuse.
         //
@@ -67,7 +67,7 @@ impl FileId {
     /// file, constructing a file ID with a path will *not* reuse the ID even
     /// if the path is the same. This method should only be used for generating
     /// "virtual" file ids such as content read from stdin.
-   //  #[track_caller]
+     #[track_caller]
     pub fn new_fake(path: VirtualPath) -> Self {
         let mut interner = INTERNER.write().unwrap();
         let num = u16::try_from(interner.from_id.len() + 1)

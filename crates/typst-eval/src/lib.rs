@@ -35,7 +35,7 @@ use typst_library::World;
 use typst_syntax::{ast, parse, parse_code, parse_math, Source, Span};
 
 /// Evaluate a source file and return the resulting module.
-// #[comemo::memoize]
+ #[comemo::memoize]
 #[typst_macros::time(name = "eval", span = source.root().span())]
 pub fn eval(
     routines: &Routines,
@@ -97,7 +97,7 @@ pub fn eval(
 /// Evaluate a string as code and return the resulting value.
 ///
 /// Everything in the output is associated with the given `span`.
-// #[comemo::memoize]
+ #[comemo::memoize]
 pub fn eval_string(
     routines: &Routines,
     world: Tracked<dyn World + '_>,

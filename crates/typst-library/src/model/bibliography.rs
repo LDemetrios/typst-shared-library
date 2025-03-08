@@ -301,7 +301,7 @@ impl Bibliography {
     }
 
     /// Decode a bibliography from loaded data sources.
-    // #[comemo::memoize]
+     #[comemo::memoize]
     #[typst_macros::time(name = "load bibliography")]
     fn decode(
         sources: &OneOrMultiple<DataSource>,
@@ -451,7 +451,7 @@ impl CslStyle {
     }
 
     /// Load a built-in CSL style.
-    // #[comemo::memoize]
+     #[comemo::memoize]
     pub fn from_archived(archived: ArchivedStyle) -> CslStyle {
         match archived.get() {
             citationberg::Style::Independent(style) => Self(Arc::new(ManuallyHash::new(
@@ -464,7 +464,7 @@ impl CslStyle {
     }
 
     /// Load a CSL style from file contents.
-    // #[comemo::memoize]
+     #[comemo::memoize]
     pub fn from_data(data: Bytes) -> StrResult<CslStyle> {
         let text = data.as_str().map_err(FileError::from)?;
         citationberg::IndependentStyle::from_xml(text)
@@ -505,7 +505,7 @@ impl Serialize for CslSource {
 }
 
 impl Reflect for CslSource {
-    // #[comemo::memoize]
+     #[comemo::memoize]
     fn input() -> CastInfo {
         let source = std::iter::once(DataSource::input());
         let names = ArchivedStyle::all().iter().map(|name| {
@@ -569,7 +569,7 @@ impl Works {
     }
 
     /// The internal implementation of [`Works::generate`].
-    // #[comemo::memoize]
+     #[comemo::memoize]
     fn generate_impl(
         routines: &Routines,
         world: Tracked<dyn World + '_>,

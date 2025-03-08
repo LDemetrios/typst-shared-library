@@ -104,7 +104,7 @@ mod tests {
     }
 
     impl ResponseExt for Response {
-       //  #[track_caller]
+         #[track_caller]
         fn must_be_at(&self, path: &str, expected: Range<usize>) -> &Self {
             match self.1 {
                 Some(Definition::Span(span)) => {
@@ -120,7 +120,7 @@ mod tests {
             self
         }
 
-       //  #[track_caller]
+         #[track_caller]
         fn must_be_value(&self, expected: impl IntoValue) -> &Self {
             match &self.1 {
                 Some(Definition::Std(value)) => {
@@ -132,7 +132,7 @@ mod tests {
         }
     }
 
-   //  #[track_caller]
+     #[track_caller]
     fn test(world: impl WorldLike, pos: impl FilePos, side: Side) -> Response {
         let world = world.acquire();
         let world = world.borrow();

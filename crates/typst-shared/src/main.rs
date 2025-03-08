@@ -12,7 +12,9 @@ pub mod compile;
 pub mod exception;
 pub mod memory_management;
 pub mod extended_info;
-
+pub mod fmt;
+pub mod download;
+pub mod terminal;
 
 pub extern "C" fn main_nop() -> JavaResult<ExtendedFileDescriptor> {
     panic!()

@@ -406,7 +406,7 @@ impl SingleChild<'_> {
 }
 
 /// The cached, internal implementation of [`SingleChild::layout`].
-// #[comemo::memoize]
+ #[comemo::memoize]
 #[allow(clippy::too_many_arguments)]
 fn layout_single_impl(
     routines: &Routines,
@@ -503,7 +503,7 @@ impl<'a> MultiChild<'a> {
 }
 
 /// The cached, internal implementation of [`MultiChild::layout_full`].
-// #[comemo::memoize]
+ #[comemo::memoize]
 #[allow(clippy::too_many_arguments)]
 fn layout_multi_impl(
     routines: &Routines,
