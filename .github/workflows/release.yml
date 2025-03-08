@@ -20,15 +20,15 @@ jobs:
       fail-fast: false
       matrix:
         include:
-        - target: x86_64-unknown-linux-gnu
-          os: ubuntu-latest
-          cross: false
-        - target: aarch64-unknown-linux-gnu
-          os: ubuntu-latest
-          cross: false
-        - target: armv7-unknown-linux-gnueabi
-          os: ubuntu-latest
-          cross: false
+#        - target: x86_64-unknown-linux-gnu
+#          os: ubuntu-latest
+#          cross: false
+#        - target: aarch64-unknown-linux-gnu
+#          os: ubuntu-latest
+#          cross: false
+#        - target: armv7-unknown-linux-gnueabi
+#          os: ubuntu-latest
+#          cross: false
 #        - target: riscv64gc-unknown-linux-gnu
 #          os: ubuntu-latest
 #          cross: true
@@ -66,17 +66,19 @@ jobs:
       run: |
         directory=typst-${{ matrix.target }}
         mkdir $directory
-        cp README.md LICENSE NOTICE $directory
-        if [ -f target/${{ matrix.target }}/release/typst_shared.dll ]; then
-          cp target/${{ matrix.target }}/release/typst_shared.dll $directory
-          7z a -r $directory.zip $directory
-        elif [ -f target/${{ matrix.target }}/release/libtypst_shared.so ]; then
-          cp target/${{ matrix.target }}/release/libtypst_shared.so $directory
-          tar cJf $directory.tar.xz $directory
-        else 
-          cp target/${{ matrix.target }}/release/libtypst_shared.dylib $directory
-          tar cJf $directory.tar.xz $directory
-        fi
+#        cp README.md LICENSE NOTICE $directory
+#        if [ -f target/${{ matrix.target }}/release/typst_shared.dll ]; then
+#          cp target/${{ matrix.target }}/release/typst_shared.dll $directory
+#          7z a -r $directory.zip $directory
+#        elif [ -f target/${{ matrix.target }}/release/libtypst_shared.so ]; then
+#          cp target/${{ matrix.target }}/release/libtypst_shared.so $directory
+#          tar cJf $directory.tar.xz $directory
+#        else
+        echo $directory  
+        ls target/${{ matrix.target }}/release
+        cp target/${{ matrix.target }}/release/libtypst_shared.dylib $directory
+        tar cJf $directory.tar.xz $directory
+#        fi
 
     - uses: actions/upload-artifact@v4
       if: github.event_name == 'workflow_dispatch'
