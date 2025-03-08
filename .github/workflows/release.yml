@@ -22,13 +22,13 @@ jobs:
         include:
         - target: x86_64-unknown-linux-gnu
           os: ubuntu-latest
-          cross: true
+          cross: false
         - target: aarch64-unknown-linux-gnu
           os: ubuntu-latest
-          cross: true
+          cross: false
         - target: armv7-unknown-linux-gnueabi
           os: ubuntu-latest
-          cross: true
+          cross: false
 #        - target: riscv64gc-unknown-linux-gnu
 #          os: ubuntu-latest
 #          cross: true
