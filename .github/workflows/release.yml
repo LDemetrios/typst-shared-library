@@ -72,16 +72,16 @@ jobs:
         tar cJf $directory.tar.xz $directory
 
     - uses: actions/upload-artifact@v4
-      if: github.event_name == 'workflow_dispatch'
+#      if: github.event_name == 'workflow_dispatch'
       with:
         name: typst-${{ matrix.target }}
         path: "typst-${{ matrix.target }}.*"
-        retention-days: 3
+#        retention-days: 3
 
-    - uses: ncipollo/release-action@v1.14.0
-      if: github.event_name == 'release'
-      with:
-        artifacts: "typst-${{ matrix.target }}.*"
-        allowUpdates: true
-        omitNameDuringUpdate: true
-        omitBodyDuringUpdate: true
+#    - uses: ncipollo/release-action@v1.14.0
+#      if: github.event_name == 'release'
+#      with:
+#        artifacts: "typst-${{ matrix.target }}.*"
+#        allowUpdates: true
+#        omitNameDuringUpdate: true
+#        omitBodyDuringUpdate: true
