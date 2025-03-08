@@ -55,7 +55,7 @@ jobs:
       if: ${{ matrix.cross }}
       run: |
         cargo install cross --git https://github.com/cross-rs/cross.git --locked --rev 085092ca
-        cross build -p typst-shared --release --target ${{ matrix.target }} --features vendor-openssl
+        cross build -p typst-shared --release --target ${{ matrix.target }}
 
     - name: Run Cargo
       if: ${{ !matrix.cross }}
