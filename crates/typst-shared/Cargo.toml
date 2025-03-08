@@ -37,3 +37,8 @@ serde_yaml = "0.9.34+deprecated"
 hex = "0.4.3"
 typstyle-core = "=0.13.0"
 codespan-reporting = { workspace = true }
+
+[features]
+default = ["embed-fonts"]
+embed-fonts = ["typst-kit/embed-fonts"]
+vendor-openssl = ["typst-kit/vendor-openssl"]
