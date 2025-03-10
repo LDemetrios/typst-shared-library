@@ -1,6 +1,6 @@
 [workspace]
 members = ["crates/*", "crates/typst-shared", "docs", "tests", "tests/fuzz"]
-default-members = ["crates/typst-cli", "crates/typst-shared"]
+default-members = ["crates/typst-shared"]
 resolver = "2"
 
 [workspace.package]
