@@ -1,6 +1,7 @@
 use crate::memory_management::ThickBytePtr;
 use std::mem;
 use typst::syntax::{parse, parse_code, parse_math, SyntaxKind, SyntaxNode};
+use typst::utils::tick;
 
 #[derive(Default)]
 pub struct FlattenedSyntaxTree {
@@ -239,6 +240,7 @@ fn cfy(tree: FlattenedSyntaxTree) -> CFlattenedSyntaxTree {
 
 #[no_mangle]
 pub extern "C" fn parse_syntax(string: ThickBytePtr, mode: i32) -> CFlattenedSyntaxTree {
+    tick!("{:?}, {}", string, mode);
     let input = string.to_str();
     let node = match mode {
         0 => parse(input.as_str()),      // Content
