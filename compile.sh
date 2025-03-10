@@ -5,14 +5,15 @@
 mkdir artifacts
 
 cargo build --release
-mkdir artifacts/linux-x86-64
-cp target/release/libtypst_shared.so artifacts/linux-x86-64/libtypst_shared.so
+mkdir artifacts/linux-x86-64 || continue
+cp target/release/libtypst_shared.so artifacts/linux-x86-64/libtypst_shared.so || continue
 
-rm -rf target
+#rm -rf target
+
 # pamac install mingw-w64
 # rustup target add x86_64-pc-windows-gnu
 cargo build --target x86_64-pc-windows-gnu --release
-mkdir artifacts/windows-x86-64
-cp target/x86_64-pc-windows-gnu/release/typst_shared.dll artifacts/windows-x86-64/typst_shared.dll
+mkdir artifacts/windows-x86-64 || continue
+cp target/x86_64-pc-windows-gnu/release/typst_shared.dll artifacts/windows-x86-64/typst_shared.dll || continue
 
-rm -rf target
+#rm -rf target

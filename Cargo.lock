@@ -2795,9 +2795,9 @@ dependencies = [
  "typst-library",
  "typst-macros",
  "typst-realize",
- "typst-syntax 0.12.0",
- "typst-timing 0.12.0",
- "typst-utils 0.12.0",
+ "typst-syntax 0.13.1",
+ "typst-timing 0.13.1",
+ "typst-utils 0.13.1",
 ]
 
 [[package]]
@@ -2844,7 +2844,7 @@ dependencies = [
  "typst-pdf",
  "typst-render",
  "typst-svg",
- "typst-timing 0.12.0",
+ "typst-timing 0.13.1",
  "ureq",
  "xz2",
  "zip",
@@ -2872,7 +2872,7 @@ dependencies = [
  "typst-assets",
  "typst-dev-assets",
  "typst-render",
- "typst-utils 0.12.0",
+ "typst-utils 0.13.1",
  "unicode-math-class",
  "unscanny",
  "yaml-front-matter",
@@ -2890,9 +2890,9 @@ dependencies = [
  "toml",
  "typst-library",
  "typst-macros",
- "typst-syntax 0.12.0",
- "typst-timing 0.12.0",
- "typst-utils 0.12.0",
+ "typst-syntax 0.13.1",
+ "typst-timing 0.13.1",
+ "typst-utils 0.13.1",
  "unicode-segmentation",
 ]
 
@@ -2905,7 +2905,7 @@ dependencies = [
  "typst",
  "typst-assets",
  "typst-render",
- "typst-syntax 0.12.0",
+ "typst-syntax 0.13.1",
 ]
 
 [[package]]
@@ -2917,9 +2917,9 @@ dependencies = [
  "typst-library",
  "typst-macros",
  "typst-svg",
- "typst-syntax 0.12.0",
- "typst-timing 0.12.0",
- "typst-utils 0.12.0",
+ "typst-syntax 0.13.1",
+ "typst-timing 0.13.1",
+ "typst-utils 0.13.1",
 ]
 
 [[package]]
@@ -2956,9 +2956,9 @@ dependencies = [
  "tar",
  "typst-assets",
  "typst-library",
- "typst-syntax 0.12.0",
- "typst-timing 0.12.0",
- "typst-utils 0.12.0",
+ "typst-syntax 0.13.1",
+ "typst-timing 0.13.1",
+ "typst-utils 0.13.1",
  "ureq",
 ]
 
@@ -2983,9 +2983,9 @@ dependencies = [
  "typst-assets",
  "typst-library",
  "typst-macros",
- "typst-syntax 0.12.0",
- "typst-timing 0.12.0",
- "typst-utils 0.12.0",
+ "typst-syntax 0.13.1",
+ "typst-timing 0.13.1",
+ "typst-utils 0.13.1",
  "unicode-bidi",
  "unicode-math-class",
  "unicode-script",
@@ -3042,9 +3042,9 @@ dependencies = [
  "typst-assets",
  "typst-dev-assets",
  "typst-macros",
- "typst-syntax 0.12.0",
- "typst-timing 0.12.0",
- "typst-utils 0.12.0",
+ "typst-syntax 0.13.1",
+ "typst-timing 0.13.1",
+ "typst-utils 0.13.1",
  "unicode-math-class",
  "unicode-normalization",
  "unicode-segmentation",
@@ -3084,9 +3084,9 @@ dependencies = [
  "typst-assets",
  "typst-library",
  "typst-macros",
- "typst-syntax 0.12.0",
- "typst-timing 0.12.0",
- "typst-utils 0.12.0",
+ "typst-syntax 0.13.1",
+ "typst-timing 0.13.1",
+ "typst-utils 0.13.1",
  "xmp-writer",
 ]
 
@@ -3101,9 +3101,9 @@ dependencies = [
  "regex",
  "typst-library",
  "typst-macros",
- "typst-syntax 0.12.0",
- "typst-timing 0.12.0",
- "typst-utils 0.12.0",
+ "typst-syntax 0.13.1",
+ "typst-timing 0.13.1",
+ "typst-utils 0.13.1",
 ]
 
 [[package]]
@@ -3119,12 +3119,12 @@ dependencies = [
  "ttf-parser",
  "typst-library",
  "typst-macros",
- "typst-timing 0.12.0",
+ "typst-timing 0.13.1",
 ]
 
 [[package]]
 name = "typst-shared"
-version = "0.12.0"
+version = "0.13.1"
 dependencies = [
  "chrono",
  "codespan-reporting",
@@ -3143,7 +3143,7 @@ dependencies = [
  "typst-pdf",
  "typst-render",
  "typst-svg",
- "typst-timing 0.12.0",
+ "typst-timing 0.13.1",
  "typstyle-core",
 ]
 
@@ -3159,26 +3159,10 @@ dependencies = [
  "ttf-parser",
  "typst-library",
  "typst-macros",
- "typst-timing 0.12.0",
- "typst-utils 0.12.0",
+ "typst-timing 0.13.1",
+ "typst-utils 0.13.1",
  "xmlparser",
  "xmlwriter",
-]
-
-[[package]]
-name = "typst-syntax"
-version = "0.13.1"
-dependencies = [
- "ecow",
- "serde",
- "toml",
- "typst-timing 0.12.0",
- "typst-utils 0.12.0",
- "unicode-ident",
- "unicode-math-class",
- "unicode-script",
- "unicode-segmentation",
- "unscanny",
 ]
 
 [[package]]
@@ -3192,6 +3176,22 @@ dependencies = [
  "toml",
  "typst-timing 0.13.0",
  "typst-utils 0.13.0",
+ "unicode-ident",
+ "unicode-math-class",
+ "unicode-script",
+ "unicode-segmentation",
+ "unscanny",
+]
+
+[[package]]
+name = "typst-syntax"
+version = "0.13.1"
+dependencies = [
+ "ecow",
+ "serde",
+ "toml",
+ "typst-timing 0.13.1",
+ "typst-utils 0.13.1",
  "unicode-ident",
  "unicode-math-class",
  "unicode-script",
@@ -3219,19 +3219,9 @@ dependencies = [
  "typst-pdf",
  "typst-render",
  "typst-svg",
- "typst-syntax 0.12.0",
+ "typst-syntax 0.13.1",
  "unscanny",
  "walkdir",
-]
-
-[[package]]
-name = "typst-timing"
-version = "0.13.1"
-dependencies = [
- "parking_lot",
- "serde",
- "serde_json",
- "web-sys",
 ]
 
 [[package]]
@@ -3246,16 +3236,13 @@ dependencies = [
 ]
 
 [[package]]
-name = "typst-utils"
+name = "typst-timing"
 version = "0.13.1"
 dependencies = [
- "once_cell",
- "portable-atomic",
- "rayon",
+ "parking_lot",
  "serde",
- "siphasher",
- "thin-vec",
- "unicode-math-class",
+ "serde_json",
+ "web-sys",
 ]
 
 [[package]]
@@ -3267,6 +3254,19 @@ dependencies = [
  "once_cell",
  "portable-atomic",
  "rayon",
+ "siphasher",
+ "thin-vec",
+ "unicode-math-class",
+]
+
+[[package]]
+name = "typst-utils"
+version = "0.13.1"
+dependencies = [
+ "once_cell",
+ "portable-atomic",
+ "rayon",
+ "serde",
  "siphasher",
  "thin-vec",
  "unicode-math-class",

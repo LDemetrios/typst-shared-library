@@ -1473,15 +1473,15 @@ impl Serialize for BottomEdge {
     }
 }
 
-impl Serialize for Hyphenate {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer,
-    {
-        tick!();
-        self.0.serialize(serializer)
-    }
-}
+// impl Serialize for Hyphenate {
+//     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+//     where
+//         S: Serializer,
+//     {
+//         tick!();
+//         self.0.serialize(serializer)
+//     }
+// }
 
 impl Serialize for StylisticSets {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
