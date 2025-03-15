@@ -4,7 +4,7 @@ use crate::cache_cell::CacheCell;
 use crate::download;
 use crate::download::PrintDownload;
 use crate::extended_info::{
-    ExtendedFileDescriptor, ExtendedFileResult, Resolve,
+    ExtendedFileDescriptor, ExtendedFileResult,
 };
 use crate::memory_management::{
     Base16ByteArray, JavaExceptPtrResult, JavaResult, ThickBytePtr,
@@ -15,7 +15,6 @@ use std::collections::HashMap;
 use std::fs;
 use std::ops::Deref;
 use std::path::{Path, PathBuf};
-use std::str::FromStr;
 use std::sync::OnceLock;
 use typst::diag::FileResult;
 use typst::foundations::{
@@ -39,24 +38,24 @@ pub type FileCallback =
 /// and JavaWorld is stored and accessed by Pointer
 pub struct JavaWorld {
     /// Typst's standard library.
-    pub(crate) library: LazyHash<Library>,
+    pub library: LazyHash<Library>,
     /// Metadata about discovered fonts. TODO make java-compatible
-    pub(crate) book: LazyHash<FontBook>,
+    pub book: LazyHash<FontBook>,
     /// Callback for World::book method.
     /// Returns c-style string representing a path to a main file.
-    pub(crate) main_callback: MainCallback,
+    pub main_callback: MainCallback,
     /// Callback for World::file method.
     /// Accepts package: Option<PackageSpec> and path: VirtualPath
     /// Return FileResult<Bytes>
-    pub(crate) file_callback: FileCallback,
+    pub file_callback: FileCallback,
     /// Fonts, handled as in SystemWorld. TODO make java-compatible
-    pub(crate) fonts: Vec<FontSlot>,
+    pub fonts: Vec<FontSlot>,
     /// File cache
-    pub(crate) files: Mutex<HashMap<FileId, FileCache>>,
+    pub files: Mutex<HashMap<FileId, FileCache>>,
     /// Now, handled as in SystemWorld
-    pub(crate) now: Option<Now>,
+    pub now: Option<Now>,
     /// Package storage, handled as in SystemWorld
-    pub(crate) package_storage: Option<PackageStorage>,
+    pub package_storage: Option<PackageStorage>,
     pub auto_load_central: bool,
 }
 
@@ -213,7 +212,7 @@ impl JavaWorld {
                 .as_ref()
                 .unwrap()
                 .prepare_package(spec, &mut PrintDownload(&spec))?;
-            let mut root = &buf;
+            let root = &buf;
             let path =
                 id.vpath().resolve(root).ok_or(FileError::AccessDenied);
             read_from_disk(&path?)

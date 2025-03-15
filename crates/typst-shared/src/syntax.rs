@@ -1,7 +1,8 @@
-use crate::memory_management::ThickBytePtr;
+use crate::memory_management::{ThickBytePtr};
 use std::mem;
 use typst::syntax::{parse, parse_code, parse_math, SyntaxKind, SyntaxNode};
 use typst::utils::tick;
+use crate::memory_management::CVec;
 
 #[derive(Default)]
 pub struct FlattenedSyntaxTree {
@@ -194,31 +195,6 @@ fn flatten_into(
 }
 
 #[repr(C)]
-pub struct CVec<T> {
-    pub ptr: *mut T,
-    pub len: i64,
-    pub cap: i64,
-}
-
-impl<T> From<Vec<T>> for CVec<T> {
-    fn from(value: Vec<T>) -> Self {
-        let res = CVec {
-            ptr: value.as_ptr() as *mut T,
-            len: value.len() as i64,
-            cap: value.capacity() as i64,
-        };
-        mem::forget(value);
-        res
-    }
-}
-
-impl<T> From<CVec<T>> for Vec<T> {
-    fn from(value: CVec<T>) -> Self {
-        unsafe { Vec::from_raw_parts(value.ptr, value.len as usize, value.cap as usize) }
-    }
-}
-
-#[repr(C)]
 pub struct CFlattenedSyntaxTree {
     pub marks: CVec<i64>,
     pub errors: CVec<u8>,
@@ -248,12 +224,13 @@ pub extern "C" fn parse_syntax(string: ThickBytePtr, mode: i32) -> CFlattenedSyn
         2 => parse_math(input.as_str()), // Math
         _ => panic!("Unexpected mode {} for syntax", mode),
     };
+    mem::forget(input);
     cfy(flattened_tree(node))
 }
 
 #[no_mangle]
 pub extern "C" fn release_flattened_tree(tree: CFlattenedSyntaxTree) {
-    let marks: Vec<i64> = tree.marks.into();
-    let errors: Vec<u8> = tree.errors.into();
-    let errors_starts: Vec<i32> = tree.errors_starts.into();
+    let _marks: Vec<i64> = tree.marks.into();
+    let _errors: Vec<u8> = tree.errors.into();
+    let _errors_starts: Vec<i32> = tree.errors_starts.into();
 }

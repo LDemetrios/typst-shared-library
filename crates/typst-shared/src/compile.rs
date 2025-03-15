@@ -3,7 +3,7 @@ use crate::java_world::JavaWorld;
 use crate::memory_management::{Base16ByteArray, JavaResult};
 use chrono::{Datelike, Timelike};
 use serde::Serialize;
-use typst::diag::{eco_format, Warned};
+use typst::diag::{Warned};
 use typst::foundations::Datetime;
 use typst::html::HtmlDocument;
 use typst::layout::{Page, PagedDocument};

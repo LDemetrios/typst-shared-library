@@ -1,3 +1,4 @@
+use std::mem;
 use crate::extended_info::{ExtendedSourceDiagnostic, ExtendedWarned, Resolve};
 use crate::java_world::JavaWorld;
 use crate::memory_management::{JavaResult, ThickBytePtr};
@@ -52,6 +53,7 @@ pub extern "C" fn query(
 
     let _ = Box::into_raw(world); // Not to drop the world!
 
+    mem::forget(selector);
     JavaResult::pack(result)
 }
 

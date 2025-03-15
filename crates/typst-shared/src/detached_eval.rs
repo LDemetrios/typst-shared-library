@@ -1,3 +1,4 @@
+use std::mem;
 use crate::extended_info::{ExtendedSourceDiagnostic, Resolve};
 use crate::java_world::JavaWorld;
 use crate::memory_management::{JavaResult, ThickBytePtr};
@@ -32,6 +33,7 @@ pub extern "C" fn detached_eval(
     let _ = Box::into_raw(world); // Not to drop the world!
     tick!();
 
+    mem::forget(source);
     JavaResult::pack(result)
 }
 

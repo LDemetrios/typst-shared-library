@@ -1,9 +1,9 @@
 use crate::java_world::JavaWorld;
 use std::ffi::CString;
 use std::marker::PhantomData;
+use std::mem;
 use std::os::raw::c_char;
 use std::ptr::{null, null_mut};
-use std::slice;
 use typst::Library;
 
 use crate::exception::Except;
@@ -38,10 +38,10 @@ pub extern "C" fn free_str(ptr: *mut c_char) {
     unsafe { drop(CString::from_raw(ptr)) };
 }
 
-static FREER: OnceLock<extern "C" fn(ticket: u64)> = OnceLock::new();
+static FREER: OnceLock<extern "C" fn(ticket: i64)> = OnceLock::new();
 
 #[no_mangle]
-pub extern "C" fn set_freer(f: extern "C" fn(u64)) -> i32 {
+pub extern "C" fn set_freer(f: extern "C" fn(i64)) -> i32 {
     match FREER.set(f) {
         // Ok(_) => Ok(()),
         // Err(_) => throw!(
@@ -56,7 +56,7 @@ pub extern "C" fn set_freer(f: extern "C" fn(u64)) -> i32 {
 #[repr(C)]
 #[derive(Debug)]
 pub struct JavaResult<T: Sized> {
-    pub ticket: u64,
+    pub ticket: i64,
     pub value: ThickBytePtr,
     pub phantom: PhantomData<T>,
 }
@@ -67,12 +67,16 @@ impl<T: for<'a> Deserialize<'a>> JavaResult<T> {
         let Self { ticket, value, phantom: _phantom } = self;
 
         tick!();
-        FREER.get().unwrap()(ticket);
+        if ticket >= 0 {
+            FREER.get().unwrap()(ticket);
+        }
         tick!();
 
         let str = value.to_str();
         tick!("{}", str);
-        serde_json::from_str::<T>(str.as_str()).unwrap()
+        let result = serde_json::from_str::<T>(str.as_str()).unwrap();
+        mem::forget(str);
+        result
     }
 }
 
@@ -107,12 +111,36 @@ impl<T> JavaExceptPtrResult<T> {
     }
 }
 
+
 #[repr(C)]
-#[derive(Copy, Clone, Debug)]
-pub struct ThickBytePtr {
-    pub ptr: *mut u8,
-    pub len: i32,
+#[derive(Debug, Copy, Clone)]
+pub struct CVec<T> {
+    pub ptr: *mut T,
+    pub len: i64,
+    pub cap: i64,
 }
+
+impl<T> From<Vec<T>> for CVec<T> {
+    fn from(value: Vec<T>) -> Self {
+        let res = CVec {
+            ptr: value.as_ptr() as *mut T,
+            len: value.len() as i64,
+            cap: value.capacity() as i64,
+        };
+        mem::forget(value);
+        res
+    }
+}
+
+impl<T> From<CVec<T>> for Vec<T> {
+    fn from(value: CVec<T>) -> Self {
+        unsafe { Vec::from_raw_parts(value.ptr, value.len as usize, value.cap as usize) }
+    }
+}
+
+#[derive(Debug, Copy, Clone)]
+#[repr(C)]
+pub struct ThickBytePtr(pub CVec<u8>);
 
 impl From<String> for ThickBytePtr {
     fn from(value: String) -> Self {
@@ -122,29 +150,35 @@ impl From<String> for ThickBytePtr {
 
 impl ThickBytePtr {
     pub fn null() -> Self {
-        ThickBytePtr { len: 0, ptr: null_mut() }
+        ThickBytePtr(CVec { ptr: null_mut(), len: 0, cap: 0 })
     }
 
     pub fn from_str(mut str: String) -> Self {
         let len = str.len();
         let ptr = str.as_mut_ptr();
+        let cap = str.capacity();
         std::mem::forget(str);
-        ThickBytePtr { len: len as i32, ptr }
+        ThickBytePtr ( CVec{
+            ptr,
+            len: len as i64,
+            cap: cap as i64,
+        } )
     }
 
     pub fn to_str(self) -> String {
         tick!("{:?}", self);
-        let Self { ptr, len } = self;
+        let CVec { ptr, len, cap } = self.0;
         tick!();
-        let bytes: &[u8] = unsafe { slice::from_raw_parts(ptr, len as usize)/*Vec::from_raw_parts(ptr, len as usize, 0)*//* */};
-        tick!();
-        String::from_utf8_lossy(bytes).into_owned()
+        unsafe {
+            String::from_raw_parts(ptr, len as usize, cap as usize) /*Vec::from_raw_parts(ptr, len as usize, 0)*//* */
+        }
     }
 
     pub fn release(self) {
-        let Self { ptr, len } = self;
-        tick!();
-         unsafe { drop(Vec::from_raw_parts(ptr, len as usize, 0) )};
+        // let Self { ptr, len } = self;
+        // tick!();
+        //  unsafe { drop(Vec::from_raw_parts(ptr, len as usize, 0) )};
+        drop(self.to_str())
     }
 }
 
@@ -185,6 +219,6 @@ impl From<Vec<u8>> for Base16ByteArray {
 }
 
 #[no_mangle]
-extern "C" fn free_thick_byte_ptr(ptr : ThickBytePtr) {
+extern "C" fn free_thick_byte_ptr(ptr: ThickBytePtr) {
     ptr.release()
 }

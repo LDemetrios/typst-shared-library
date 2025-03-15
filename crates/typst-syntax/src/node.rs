@@ -5,7 +5,6 @@ use std::sync::Arc;
 
 use ecow::{eco_format, eco_vec, EcoString, EcoVec};
 
-use crate::ast::AstNode;
 use crate::{FileId, Span, SyntaxKind};
 
 /// A node in the untyped syntax tree.

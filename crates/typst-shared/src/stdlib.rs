@@ -4,6 +4,7 @@ use crate::memory_management::{Base16ByteArray, JavaResult, ThickBytePtr};
 use parking_lot::Mutex;
 use std::collections::HashMap;
 use std::io::Write;
+use std::mem;
 use std::os::raw::c_int;
 use std::path::PathBuf;
 use std::str::FromStr;
@@ -15,7 +16,7 @@ use typst_kit::fonts::Fonts;
 use typst_library::diag::{bail, At, SourceResult, StrResult};
 use typst_library::engine::Engine;
 use typst_library::foundations::{
-    Array, Context, Dict, IntoValue, NoneValue, Repr, Scope, Str, Value,
+    Array, Context, Dict, IntoValue, NoneValue, Repr, Scope, Value,
 };
 use typst_library::model::{Numbering, NumberingPattern};
 use typst_library::routines::EvalMode;
@@ -111,6 +112,8 @@ pub extern "C" fn create_stdlib(
         .define("forest", Color::from_u8(0x43, 0xA1, 0x27, 0xFF));
 
     tick!();
+
+    mem::forget(inputs_str);
 
     Box::into_raw(Box::new(lib))
 }
