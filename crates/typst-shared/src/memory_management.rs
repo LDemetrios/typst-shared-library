@@ -5,6 +5,7 @@ use std::mem;
 use std::os::raw::c_char;
 use std::ptr::{null, null_mut};
 use typst::Library;
+use typst::comemo;
 
 use crate::exception::Except;
 use hex::{decode, encode};
@@ -221,4 +222,9 @@ impl From<Vec<u8>> for Base16ByteArray {
 #[no_mangle]
 extern "C" fn free_thick_byte_ptr(ptr: ThickBytePtr) {
     ptr.release()
+}
+
+#[no_mangle]
+extern "C" fn evict_cahce(max_age : i64) {
+    comemo::evict(max_age as usize)
 }
