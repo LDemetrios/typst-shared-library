@@ -4,7 +4,7 @@ use std::marker::PhantomData;
 use std::mem;
 use std::os::raw::c_char;
 use std::ptr::{null, null_mut};
-use typst::Library;
+use typst::{comemo, Library};
 
 use crate::exception::Except;
 use hex::{decode, encode};
@@ -111,7 +111,6 @@ impl<T> JavaExceptPtrResult<T> {
     }
 }
 
-
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct CVec<T> {
@@ -158,11 +157,7 @@ impl ThickBytePtr {
         let ptr = str.as_mut_ptr();
         let cap = str.capacity();
         std::mem::forget(str);
-        ThickBytePtr ( CVec{
-            ptr,
-            len: len as i64,
-            cap: cap as i64,
-        } )
+        ThickBytePtr(CVec { ptr, len: len as i64, cap: cap as i64 })
     }
 
     pub fn to_str(self) -> String {
@@ -221,4 +216,9 @@ impl From<Vec<u8>> for Base16ByteArray {
 #[no_mangle]
 extern "C" fn free_thick_byte_ptr(ptr: ThickBytePtr) {
     ptr.release()
+}
+
+#[no_mangle]
+extern "C" fn evict_cache(max_age: i64) {
+    comemo::evict(max_age as usize)
 }
