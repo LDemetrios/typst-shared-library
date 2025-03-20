@@ -157,7 +157,11 @@ impl ThickBytePtr {
         let ptr = str.as_mut_ptr();
         let cap = str.capacity();
         std::mem::forget(str);
-        ThickBytePtr(CVec { ptr, len: len as i64, cap: cap as i64 })
+        ThickBytePtr ( CVec{
+            ptr,
+            len: len as i64,
+            cap: cap as i64,
+        } )
     }
 
     pub fn to_str(self) -> String {
