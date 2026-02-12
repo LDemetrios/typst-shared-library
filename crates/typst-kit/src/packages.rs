@@ -1,3 +1,5 @@
+// Modified by LDemetrios
+
 //! Package loading.
 
 use std::path::{Path, PathBuf};
@@ -107,6 +109,11 @@ impl SystemPackages {
                 let mut archive = self.universe.package(spec)?;
 
                 cache.store(spec, |tempdir| {
+                    #[cfg(target_arch = "wasm32")]
+                    {
+                        unpack_archive_without_canonicalize(&mut archive, tempdir)
+                    }
+                    #[cfg(not(target_arch = "wasm32"))]
                     archive.unpack(tempdir).map_err(|err| {
                         PackageError::MalformedArchive(Some(eco_format!("{err}")))
                     })
@@ -138,6 +145,64 @@ impl SystemPackages {
                 .ok_or_else(|| eco_format!("please specify the desired version"))
         }
     }
+}
+
+#[cfg(all(feature = "universe-packages", target_arch = "wasm32"))]
+fn unpack_archive_without_canonicalize<R: Read>(
+    archive: &mut tar::Archive<R>,
+    root: &Path,
+) -> PackageResult<()> {
+    use std::fs::{self, File};
+    use std::io::copy;
+    use std::path::Component;
+
+    let mut entries = archive.entries().map_err(|err| {
+        PackageError::MalformedArchive(Some(eco_format!("{err}")))
+    })?;
+
+    while let Some(entry) = entries.next() {
+        let mut entry = entry.map_err(|err| {
+            PackageError::MalformedArchive(Some(eco_format!("{err}")))
+        })?;
+
+        let path = entry.path().map_err(|err| {
+            PackageError::MalformedArchive(Some(eco_format!("{err}")))
+        })?;
+        let rel = path.as_ref();
+        if rel.is_absolute()
+            || rel
+                .components()
+                .any(|c| matches!(c, Component::ParentDir | Component::RootDir | Component::Prefix(_)))
+        {
+            return Err(PackageError::MalformedArchive(Some(eco_format!(
+                "invalid entry path in package archive: {}",
+                rel.to_string_lossy()
+            ))));
+        }
+
+        let out = root.join(rel);
+        if entry.header().entry_type().is_dir() {
+            fs::create_dir_all(&out).map_err(|err| {
+                PackageError::MalformedArchive(Some(eco_format!("{err}")))
+            })?;
+            continue;
+        }
+        if entry.header().entry_type().is_file() {
+            if let Some(parent) = out.parent() {
+                fs::create_dir_all(parent).map_err(|err| {
+                    PackageError::MalformedArchive(Some(eco_format!("{err}")))
+                })?;
+            }
+            let mut file = File::create(&out).map_err(|err| {
+                PackageError::MalformedArchive(Some(eco_format!("{err}")))
+            })?;
+            copy(&mut entry, &mut file).map_err(|err| {
+                PackageError::MalformedArchive(Some(eco_format!("{err}")))
+            })?;
+        }
+    }
+
+    Ok(())
 }
 
 /// Serves packages from a well-structured directory on the file system.
@@ -270,9 +335,41 @@ impl FsPackages {
         match std::fs::rename(&tempdir, &package_dir) {
             Ok(()) => Ok(()),
             Err(err) if err.kind() == std::io::ErrorKind::DirectoryNotEmpty => Ok(()),
+            #[cfg(target_arch = "wasm32")]
+            Err(err) if err.kind() == std::io::ErrorKind::Unsupported => {
+                move_dir_contents(tempdir.as_ref(), &package_dir)
+                    .map_err(|err| error("failed to move downloaded package directory", err))
+            }
             Err(err) => Err(error("failed to move downloaded package directory", err)),
         }
     }
+}
+
+#[cfg(all(feature = "universe-packages", target_arch = "wasm32"))]
+fn move_dir_contents(src: &Path, dst: &Path) -> std::io::Result<()> {
+    use std::fs;
+    if dst.exists() {
+        return Ok(());
+    }
+    fs::create_dir_all(dst)?;
+    copy_dir_contents(src, dst)
+}
+
+#[cfg(all(feature = "universe-packages", target_arch = "wasm32"))]
+fn copy_dir_contents(src: &Path, dst: &Path) -> std::io::Result<()> {
+    use std::fs;
+    for entry in fs::read_dir(src)? {
+        let entry = entry?;
+        let ty = entry.file_type()?;
+        let to = dst.join(entry.file_name());
+        if ty.is_dir() {
+            fs::create_dir_all(&to)?;
+            copy_dir_contents(&entry.path(), &to)?;
+        } else if ty.is_file() {
+            fs::copy(entry.path(), to)?;
+        }
+    }
+    Ok(())
 }
 
 /// A temporary directory that is a automatically cleaned up.

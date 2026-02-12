@@ -13,7 +13,7 @@ use crate::world::packages::PackageManager;
 use crate::world::register_test_definitions;
 use typst::syntax::{FileId, Source, SyntaxMode};
 use typst::utils::{LazyHash, SmallBitSet};
-use typst_library::diag::{FileResult, Severity};
+use typst_library::diag::{FileError, FileResult, Severity};
 use typst_library::foundations::{Bytes, Datetime, Value};
 use typst_library::text::{Font, FontBook};
 use typst_library::{Library, World};
@@ -47,41 +47,18 @@ pub struct TicketedReader(i64);
 
 impl ReadCallback for TicketedReader {
     fn read(&self, id: FileId) -> FileResult<Vec<u8>> {
-        match id.root() {
-            typst::syntax::VirtualRoot::Project => {
-                let id_w = ExtendedFileDescriptor {
-                    pack: None,
-                    path: id.vpath().get_with_slash().to_string(),
-                };
-                let arg = RawString::from_value(&id_w);
-                let result = unsafe {
-                    let mut res = RawString::default();
-                    read_file_by_reader_ticket(&mut res, self.0, arg.len, arg.ptr as *mut u8);
-                    res
-                };
-                arg.release();
-                result.read_to::<ExtendedFileResult<Base64Bytes>>().map(|it| it.0)
-                    .map_err(|it| it.into())
-            }
-            typst::syntax::VirtualRoot::Package(_) => {
-                #[cfg(target_arch = "wasm32")]
-                {
-                    let spec = match id.root() {
-                        typst::syntax::VirtualRoot::Package(spec) => spec,
-                        _ => unreachable!(),
-                    };
-                    crate::world::packages::load_package_file_in_memory(
-                        spec,
-                        id.vpath().get_with_slash(),
-                    )
-                }
-                #[cfg(not(target_arch = "wasm32"))]
-                {
-                    let packages = PackageManager::new(None, None);
-                    packages.load(id)
-                }
-            }
-        }
+        let id_w: ExtendedFileDescriptor = id.into();
+        let arg = RawString::from_value(&id_w);
+        let result = unsafe {
+            let mut res = RawString::default();
+            read_file_by_reader_ticket(&mut res, self.0, arg.len, arg.ptr as *mut u8);
+            res
+        };
+        arg.release();
+        result
+            .read_to::<ExtendedFileResult<Base64Bytes>>()
+            .map(|it| it.0)
+            .map_err(|it| it.into())
     }
 }
 
@@ -93,7 +70,30 @@ pub extern "C" fn files_cache(reader_ticket: i64) -> *const FilesCache<TicketedR
 free_func!(free_files_cache, FilesCache<TicketedReader>);
 
 #[unsafe(no_mangle)]
-pub extern "C" fn reset_file(cache: &mut FilesCache<TicketedReader>, id_len: u64, id_ptr: *mut u8) {
+pub extern "C" fn resolve_preview_package(
+    result: &mut RawString,
+    id_len: u64,
+    id_ptr: *mut u8,
+) {
+    let id = RawString::new(id_len, id_ptr);
+    let descriptor = id.read_to::<ExtendedFileDescriptor>();
+    let result_v: ExtendedFileResult<Base64Bytes> = match descriptor.pack.clone() {
+        Some(_) => {
+            let packages = PackageManager::new(None, None);
+            packages.load(descriptor.into()).map(Base64Bytes)
+        }
+        None => Err(FileError::NotFound(descriptor.path.into())),
+    }
+    .map_err(|it| it.into());
+    RawString::write_from(result, &result_v);
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn reset_file(
+    cache: &mut FilesCache<TicketedReader>,
+    id_len: u64,
+    id_ptr: *mut u8,
+) {
     let id = RawString::new(id_len, id_ptr);
     if let Some(file) = to_file_id_or_none(id) {
         cache.reset(file);
@@ -111,11 +111,8 @@ pub extern "C" fn font_collection(
 ) -> *const FontCollection {
     let font_paths = RawString::new(font_paths_len, font_paths_ptr);
     let paths = font_paths.read_to::<Vec<String>>();
-    let collection = FontCollection::new(
-        include_system != 0,
-        include_embedded != 0,
-        paths,
-    );
+    let collection =
+        FontCollection::new(include_system != 0, include_embedded != 0, paths);
     Box::into_raw(Box::new(collection))
 }
 
@@ -139,7 +136,8 @@ pub extern "C" fn with_inputs(
     result: &mut RawString,
     fonts: *const FontCollection,
     library: &mut LazyHash<Library>,
-    inputs_len: u64, inputs_ptr: *mut u8,
+    inputs_len: u64,
+    inputs_ptr: *mut u8,
     close_previous: i32,
 ) {
     let inputs = RawString::new(inputs_len, inputs_ptr);
@@ -149,26 +147,32 @@ pub extern "C" fn with_inputs(
     } else {
         library.clone()
     };
-    let stub: CompositeWorld<TicketedReader> = CompositeWorld::new(None, const_ref(fonts), Some(&library), None, None);
-    let result_v: Result<i64, Vec<ExtendedSourceDiagnostic>> = match evaluate(&stub, inputs.as_str(), SyntaxMode::Code) {
-        Err(err) => Err(err.resolve(&stub)),
-        Ok(Value::Dict(val)) => {
-            let mut library_inner = library.into_inner();
-            replace_inputs(&mut library_inner, val);
-            Ok(Box::into_raw(Box::new(LazyHash::new(library_inner))) as _)
-        }
-        _ => detached_diagnostic("Evaluated `inputs` is not a dict"),
-    };
+    let stub: CompositeWorld<TicketedReader> =
+        CompositeWorld::new(None, const_ref(fonts), Some(&library), None, None);
+    let result_v: Result<i64, Vec<ExtendedSourceDiagnostic>> =
+        match evaluate(&stub, inputs.as_str(), SyntaxMode::Code) {
+            Err(err) => Err(err.resolve(&stub)),
+            Ok(Value::Dict(val)) => {
+                let mut library_inner = library.into_inner();
+                replace_inputs(&mut library_inner, val);
+                Ok(Box::into_raw(Box::new(LazyHash::new(library_inner))) as _)
+            }
+            _ => detached_diagnostic("Evaluated `inputs` is not a dict"),
+        };
     RawString::write_from(result, &result_v);
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn ext_with_test_definitions(library: &mut LazyHash<Library>, close_previous: i32) -> i64 {
+pub extern "C" fn ext_with_test_definitions(
+    library: &mut LazyHash<Library>,
+    close_previous: i32,
+) -> i64 {
     let mut library = if close_previous != 0 {
         *unsafe { Box::from_raw(library) }
     } else {
         library.clone()
-    }.into_inner();
+    }
+    .into_inner();
     register_test_definitions(&mut library);
     Box::into_raw(Box::new(LazyHash::new(library))) as *const LazyHash<Library> as i64
 }
@@ -178,8 +182,10 @@ pub extern "C" fn with_styles(
     result: &mut RawString,
     fonts: *const FontCollection,
     library: &mut LazyHash<Library>,
-    styles_len: u64, styles_ptr: *mut u8,
-    close_previous: i32, append: i32,
+    styles_len: u64,
+    styles_ptr: *mut u8,
+    close_previous: i32,
+    append: i32,
 ) {
     let styles = RawString::new(styles_len, styles_ptr);
     let styles = styles.into_string().unwrap();
@@ -188,30 +194,33 @@ pub extern "C" fn with_styles(
     } else {
         library.clone()
     };
-    let stub: CompositeWorld<TicketedReader> = CompositeWorld::new(None, const_ref(fonts), Some(&library), None, None);
-    let result_v: Result<i64, Vec<ExtendedSourceDiagnostic>> = match evaluate(&stub, styles.as_str(), SyntaxMode::Code) {
-        Err(err) => Err(err.resolve(&stub)),
-        Ok(Value::Content(val))  => {
-            if let Ok(Value::Styles(styles)) = val.field_by_name("styles") {
-                let library_inner = library.into_inner();
-                let new_styles = if append != 0 {
-                    styles.into_iter().chain(library_inner.styles.into_iter())
-                        .collect::<typst_library::foundations::Styles>()
-                } else {
-                    styles
-                };
-                let new_lib = Library{ styles: new_styles, ..library_inner };
+    let stub: CompositeWorld<TicketedReader> =
+        CompositeWorld::new(None, const_ref(fonts), Some(&library), None, None);
+    let result_v: Result<i64, Vec<ExtendedSourceDiagnostic>> =
+        match evaluate(&stub, styles.as_str(), SyntaxMode::Code) {
+            Err(err) => Err(err.resolve(&stub)),
+            Ok(Value::Content(val)) => {
+                if let Ok(Value::Styles(styles)) = val.field_by_name("styles") {
+                    let library_inner = library.into_inner();
+                    let new_styles = if append != 0 {
+                        styles
+                            .into_iter()
+                            .chain(library_inner.styles.into_iter())
+                            .collect::<typst_library::foundations::Styles>()
+                    } else {
+                        styles
+                    };
+                    let new_lib = Library { styles: new_styles, ..library_inner };
 
-                Ok(Box::into_raw(Box::new(LazyHash::new(new_lib))) as _)
-            } else {
-                detached_diagnostic("Evaluated `styles` is not a styled")
+                    Ok(Box::into_raw(Box::new(LazyHash::new(new_lib))) as _)
+                } else {
+                    detached_diagnostic("Evaluated `styles` is not a styled")
+                }
             }
-        }
-        _ => detached_diagnostic("Evaluated `styles` is not a content"),
-    };
+            _ => detached_diagnostic("Evaluated `styles` is not a content"),
+        };
     RawString::write_from(result, &result_v);
 }
-
 
 pub fn detached_diagnostic<T>(message: &str) -> Result<T, Vec<ExtendedSourceDiagnostic>> {
     Err(vec![ExtendedSourceDiagnostic {
@@ -250,7 +259,7 @@ pub fn const_ref<T>(value: *const T) -> Option<&'static T> {
     }
 }
 
-pub struct NoopWorld{}
+pub struct NoopWorld {}
 
 impl World for NoopWorld {
     fn library(&self) -> &LazyHash<Library> {
