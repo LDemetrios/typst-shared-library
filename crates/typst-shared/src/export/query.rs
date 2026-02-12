@@ -7,15 +7,15 @@ use crate::export::world_parts::TicketedReader;
 use crate::serial::extended_info::{ExtendedSourceDiagnostic, ExtendedWarned, Resolve};
 use crate::values::ToJson;
 use crate::world::{CompositeWorld, FilesCache, FontCollection};
+use typst::World;
 use typst::diag::{EcoString, HintedStrResult};
 use typst::ecow::eco_vec;
 use typst::foundations::{Content, IntoValue, LocatableSelector};
 use typst::layout::PagedDocument;
 use typst::syntax::{Span, Spanned, SyntaxMode};
 use typst::utils::LazyHash;
-use typst::World;
-use typst_library::diag::{Severity, SourceDiagnostic};
 use typst_library::Library;
+use typst_library::diag::{Severity, SourceDiagnostic};
 
 #[unsafe(no_mangle)]
 pub extern "C" fn query(
@@ -23,9 +23,12 @@ pub extern "C" fn query(
     context: &mut FilesCache<TicketedReader>,
     fonts: &mut FontCollection,
     stdlib: &mut LazyHash<Library>,
-    main_len: u64, main_ptr: *mut u8,
-    now_millis_or_flag: i64,     now_nanos: i32,
-    selector_len: u64, selector_ptr: *mut u8,
+    main_len: u64,
+    main_ptr: *mut u8,
+    now_millis_or_flag: i64,
+    now_nanos: i32,
+    selector_len: u64,
+    selector_ptr: *mut u8,
 ) {
     let main = RawString::new(main_len, main_ptr);
     let now = RawNow::new(now_millis_or_flag, now_nanos);
@@ -46,8 +49,11 @@ pub extern "C" fn query(
             .map(|it| {
                 it.and_then(|it| match retrieve(&&world, selector.as_str(), &&it) {
                     Ok(data) => {
-                        let mapped: Vec<_> =
-                            data.into_iter().map(|c| c.into_value().to_json()).collect();
+                        let mapped = data
+                            .into_iter()
+                            .map(|c| c.into_value())
+                            .collect::<Vec<_>>()
+                            .to_json();
                         Ok(serde_json::to_string_pretty(&mapped)
                             .expect("Unexpected error in serializing"))
                     }
