@@ -1,3 +1,5 @@
+// Modified by LDemetrios 
+
 use std::borrow::Cow;
 use std::num::NonZeroUsize;
 use std::str::FromStr;
@@ -412,8 +414,8 @@ impl ShowSet for Packed<FigureElem> {
         // Still allows breakable figures with
         // `show figure: set block(breakable: true)`.
         let mut map = Styles::new();
-        map.set(BlockElem::breakable, false);
-        map.set(AlignElem::alignment, Alignment::CENTER);
+        map.set_internal(BlockElem::breakable, false);
+        map.set_internal(AlignElem::alignment, Alignment::CENTER);
         map
     }
 }

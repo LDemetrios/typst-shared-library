@@ -1,3 +1,5 @@
+// Modified by LDemetrios 
+
 use ecow::EcoString;
 use typst_utils::Numeric;
 
@@ -400,6 +402,8 @@ impl Resolve for Stroke {
     }
 }
 
+impl crate::foundations::DynValueMarker for Stroke {}
+
 cast! {
     type Stroke,
     thickness: Length => Self {
@@ -500,6 +504,12 @@ pub struct DashPattern<T: Numeric = Length, DT = DashLength<T>> {
     pub array: Vec<DT>,
     /// The dash phase.
     pub phase: T,
+}
+
+impl<T: Numeric, DT> DashPattern<T, DT> {
+    pub fn new(array: Vec<DT>, phase: T) -> Self {
+        Self { array, phase }
+    }
 }
 
 impl<T: Numeric + Repr, DT: Repr> Repr for DashPattern<T, DT> {
@@ -632,6 +642,29 @@ pub struct FixedStroke {
     pub dash: Option<DashPattern<Abs, Abs>>,
     /// The miter limit. Defaults to 4.0, same as `tiny-skia`.
     pub miter_limit: Ratio,
+}
+
+impl crate::foundations::IntoValue for FixedStroke {
+    fn into_value(self) -> Value {
+        let Self { paint, thickness, cap, join, dash, miter_limit } = self;
+        let dash_mapped: Option<DashPattern<Abs, DashLength<Abs>>> =
+            dash.map(|DashPattern { array, phase }| {
+                DashPattern::<Abs, DashLength<Abs>>::new(
+                    array.into_iter().map(|l| DashLength::Length(l)).collect(),
+                    phase,
+                )
+            });
+
+        Stroke {
+            paint: Smart::Custom(paint),
+            thickness: Smart::Custom(thickness),
+            cap: Smart::Custom(cap),
+            join: Smart::Custom(join),
+            dash: Smart::Custom(dash_mapped),
+            miter_limit: Smart::Custom(miter_limit),
+        }
+        .into_value()
+    }
 }
 
 impl FixedStroke {

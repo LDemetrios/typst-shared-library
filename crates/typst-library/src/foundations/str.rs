@@ -1,3 +1,5 @@
+// Modified by LDemetrios 
+
 use std::borrow::{Borrow, Cow};
 use std::fmt::{self, Debug, Display, Formatter};
 use std::hash::{Hash, Hasher};
@@ -974,10 +976,16 @@ fn string_is_empty() -> EcoString {
 #[derive(Debug, Clone)]
 pub struct Regex(regex::Regex);
 
+impl crate::foundations::DynValueMarker for Regex {}
+
 impl Regex {
     /// Create a new regular expression.
     pub fn new(re: &str) -> StrResult<Self> {
         regex::Regex::new(re).map(Self).map_err(|err| eco_format!("{err}"))
+    }
+
+    pub fn pattern(&self) -> &str {
+        self.0.as_str()
     }
 }
 

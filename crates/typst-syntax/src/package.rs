@@ -1,3 +1,5 @@
+// Modified by LDemetrios 
+
 //! Package manifest parsing.
 
 use std::collections::BTreeMap;
@@ -222,7 +224,7 @@ impl PackageInfo {
 }
 
 /// Identifies a package.
-#[derive(Clone, Eq, PartialEq, Hash)]
+#[derive(Clone, Eq, PartialEq, Hash, Serialize, Deserialize)]
 pub struct PackageSpec {
     /// The namespace the package lives in.
     pub namespace: EcoString,

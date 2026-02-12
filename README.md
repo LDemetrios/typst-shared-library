@@ -1,3 +1,16 @@
+
+This repository, "typst-shared-library" is a fork of Typst (https://github.com/typst/typst) and is not
+affiliated with the upstream project.
+
+Fork author: Dmitry Roman "LDemetrios" Liapin (ldemetrios@yandex.ru, ldemetrios.org)
+
+It is intended to facilitate the usage of Typst compiler as an external library, through any kind of FFI,
+unfortunately, for that some internal code still should've been altered. 
+
+Summary of fork changes (how this repo is different from upstream, and for what purpose): see `FORK_CHANGES.md`.
+
+# Original README of upstream Typst follows: 
+
 <h1 align="center">
   <img alt="Typst" src="https://user-images.githubusercontent.com/17899797/226108480-722b770e-6313-40d7-84f2-26bebb55a281.png">
 </h1>

@@ -1,3 +1,5 @@
+// Modified by LDemetrios 
+
 //! Documentation provider for Typst.
 
 mod contribs;
@@ -69,10 +71,12 @@ static LIBRARY: LazyLock<LazyHash<Library>> = LazyLock::new(|| {
     scope.reset_category();
 
     // Adjust the default look.
-    lib.styles.set(PageElem::width, Smart::Custom(Abs::pt(240.0).into()));
-    lib.styles.set(PageElem::height, Smart::Auto);
-    lib.styles
-        .set(PageElem::margin, Margin::splat(Some(Smart::Custom(Abs::pt(15.0).into()))));
+    lib.styles.set_internal(PageElem::width, Smart::Custom(Abs::pt(240.0).into()));
+    lib.styles.set_internal(PageElem::height, Smart::Auto);
+    lib.styles.set_internal(
+        PageElem::margin,
+        Margin::splat(Some(Smart::Custom(Abs::pt(15.0).into()))),
+    );
 
     LazyHash::new(lib)
 });

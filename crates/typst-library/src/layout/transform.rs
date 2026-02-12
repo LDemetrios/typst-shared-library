@@ -1,3 +1,5 @@
+// Modified by LDemetrios 
+
 use crate::foundations::{Content, Smart, cast, elem};
 use crate::layout::{Abs, Alignment, Angle, HAlignment, Length, Ratio, Rel, VAlignment};
 
@@ -123,7 +125,7 @@ pub struct ScaleElem {
     /// The body will be mirrored horizontally if the parameter is negative.
     #[parse(
         let all = args.find()?;
-        args.named("x")?.or(all)
+        args.named("x")?.or(all.clone())
     )]
     #[default(Smart::Custom(ScaleAmount::Ratio(Ratio::one())))]
     pub x: Smart<ScaleAmount>,
@@ -131,7 +133,7 @@ pub struct ScaleElem {
     /// The vertical scaling factor.
     ///
     /// The body will be mirrored vertically if the parameter is negative.
-    #[parse(args.named("y")?.or(all))]
+    #[parse(args.named("y")?.or(all.clone()))]
     #[default(Smart::Custom(ScaleAmount::Ratio(Ratio::one())))]
     pub y: Smart<ScaleAmount>,
 

@@ -1,3 +1,5 @@
+// Modified by LDemetrios
+
 use comemo::Track;
 
 use crate::diag::{Hint, HintedStrResult, SourceResult, bail};
@@ -65,7 +67,6 @@ fn require<T>(val: Option<T>) -> HintedStrResult<T> {
 pub struct ContextElem {
     /// The function to call with the context.
     #[required]
-    #[internal]
     func: Func,
 }
 

@@ -1,3 +1,5 @@
+// Modified by LDemetrios
+
 //! The compiler for the _Typst_ markup language.
 //!
 //! # Steps
@@ -101,7 +103,7 @@ fn compile_impl<D: Document>(
 
     let library = world.library();
     let base = StyleChain::new(&library.styles);
-    let target = TargetElem::target.set(D::target()).wrap();
+    let target = TargetElem::target.set_internal(D::target()).wrap();
     let styles = base.chain(&target);
     let empty_introspector = Introspector::default();
 

@@ -1,3 +1,5 @@
+// Modified by LDemetrios 
+
 use std::fmt::{self, Display, Formatter};
 use std::hash::{Hash, Hasher};
 use std::ops::Neg;
@@ -92,7 +94,7 @@ use crate::foundations::{Repr, Str, cast, func, repr, scope, ty};
 /// are fully precise.
 #[ty(scope, cast)]
 #[derive(Debug, Default, Copy, Clone, Eq, PartialEq, Ord, PartialOrd)]
-pub struct Decimal(rust_decimal::Decimal);
+pub struct Decimal(pub rust_decimal::Decimal);
 
 impl Decimal {
     pub const ZERO: Self = Self(rust_decimal::Decimal::ZERO);

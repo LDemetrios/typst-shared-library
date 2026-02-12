@@ -1,3 +1,5 @@
+// Modified by LDemetrios 
+
 use std::num::NonZeroUsize;
 
 use codex::styling::MathVariant;
@@ -194,15 +196,15 @@ impl ShowSet for Packed<EquationElem> {
     fn show_set(&self, styles: StyleChain) -> Styles {
         let mut out = Styles::new();
         if self.block.get(styles) {
-            out.set(AlignElem::alignment, Alignment::CENTER);
-            out.set(BlockElem::breakable, false);
-            out.set(ParLine::numbering, None);
-            out.set(EquationElem::size, MathSize::Display);
+            out.set_internal(AlignElem::alignment, Alignment::CENTER);
+            out.set_internal(BlockElem::breakable, false);
+            out.set_internal(ParLine::numbering, None);
+            out.set_internal(EquationElem::size, MathSize::Display);
         } else {
-            out.set(EquationElem::size, MathSize::Text);
+            out.set_internal(EquationElem::size, MathSize::Text);
         }
-        out.set(TextElem::weight, FontWeight::from_number(450));
-        out.set(
+        out.set_internal(TextElem::weight, FontWeight::from_number(450));
+        out.set_internal(
             TextElem::font,
             FontList(vec![FontFamily::new("New Computer Modern Math")]),
         );

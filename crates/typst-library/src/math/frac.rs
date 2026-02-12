@@ -1,3 +1,5 @@
+// Modified by LDemetrios 
+
 use typst_syntax::Spanned;
 
 use crate::diag::bail;
@@ -70,14 +72,12 @@ pub struct FracElem {
 
     /// Whether the numerator was originally surrounded by parentheses
     /// that were stripped by the parser.
-    #[internal]
     #[parse(None)]
     #[default(false)]
     pub num_deparenthesized: bool,
 
     /// Whether the denominator was originally surrounded by parentheses
     /// that were stripped by the parser.
-    #[internal]
     #[parse(None)]
     #[default(false)]
     pub denom_deparenthesized: bool,

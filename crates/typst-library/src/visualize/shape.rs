@@ -1,3 +1,5 @@
+// Modified by LDemetrios 
+
 use crate::foundations::{Cast, Content, Smart, elem};
 use crate::layout::{Abs, Corners, Length, Point, Rect, Rel, Sides, Size, Sizing};
 use crate::visualize::{Curve, FixedStroke, Paint, Stroke};
@@ -155,7 +157,7 @@ pub struct SquareElem {
         match size {
             None => args.named("width")?,
             size => size,
-        }
+        }.map(crate::foundations::restore_derived)
     )]
     pub width: Smart<Rel<Length>>,
 
@@ -166,7 +168,7 @@ pub struct SquareElem {
     #[parse(match size {
         None => args.named("height")?,
         size => size.map(Into::into),
-    })]
+    }.map(crate::foundations::restore_derived))]
     pub height: Sizing,
 
     /// How to fill the square. See the [rectangle's documentation]($rect.fill)
@@ -286,7 +288,7 @@ pub struct CircleElem {
         match size {
             None => args.named("width")?,
             size => size,
-        }
+        }.map(crate::foundations::restore_derived)
     )]
     pub width: Smart<Rel<Length>>,
 
@@ -298,7 +300,7 @@ pub struct CircleElem {
     #[parse(match size {
         None => args.named("height")?,
         size => size.map(Into::into),
-    })]
+    }.map(crate::foundations::restore_derived))]
     pub height: Sizing,
 
     /// How to fill the circle. See the [rectangle's documentation]($rect.fill)

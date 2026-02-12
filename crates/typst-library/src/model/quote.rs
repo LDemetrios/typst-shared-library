@@ -1,3 +1,5 @@
+// Modified by LDemetrios 
+
 use typst_syntax::Span;
 
 use crate::foundations::{
@@ -148,7 +150,7 @@ impl QuoteElem {
             body,
             TextElem::packed(quotes.close(double)),
         ])
-        .set(QuoteElem::depth, Depth(1))
+        .set_internal(QuoteElem::depth, Depth(1))
     }
 }
 
@@ -190,10 +192,10 @@ impl ShowSet for Packed<QuoteElem> {
     fn show_set(&self, styles: StyleChain) -> Styles {
         let mut out = Styles::new();
         if self.block.get(styles) {
-            out.set(PadElem::left, Em::new(1.0).into());
-            out.set(PadElem::right, Em::new(1.0).into());
-            out.set(BlockElem::above, Smart::Custom(Em::new(2.4).into()));
-            out.set(BlockElem::below, Smart::Custom(Em::new(1.8).into()));
+            out.set_internal(PadElem::left, Em::new(1.0).into());
+            out.set_internal(PadElem::right, Em::new(1.0).into());
+            out.set_internal(BlockElem::above, Smart::Custom(Em::new(2.4).into()));
+            out.set_internal(BlockElem::below, Smart::Custom(Em::new(1.8).into()));
         }
         out
     }

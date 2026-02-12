@@ -1,3 +1,5 @@
+// Modified by LDemetrios 
+
 #[doc(inline)]
 pub use typst_macros::func;
 use typst_syntax::ast::AstNode;
@@ -138,14 +140,14 @@ use crate::foundations::{
 #[derive(Clone, Hash)]
 pub struct Func {
     /// The internal representation.
-    inner: FuncInner,
+    pub inner: FuncInner,
     /// The span with which errors are reported when this function is called.
     span: Span,
 }
 
 /// The different kinds of function representations.
 #[derive(Clone, PartialEq, Hash)]
-enum FuncInner {
+pub enum FuncInner {
     /// A native Rust function.
     Native(Static<NativeFuncData>),
     /// A function for an element.

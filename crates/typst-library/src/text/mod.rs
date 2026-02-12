@@ -1,3 +1,5 @@
+// Modified by LDemetrios 
+
 //! Text handling.
 
 mod case;
@@ -159,11 +161,12 @@ pub struct TextElem {
     /// 分别设置“中文”和English字体
     /// ```
     #[parse({
-        let font_list: Option<Spanned<FontList>> = args.named("font")?;
-        if let Some(list) = &font_list {
-            check_font_list(engine, list);
-        }
-        font_list.map(|font_list| font_list.v)
+         args.named_derive_spanned::<FontList, _>("font", |font_list| {
+             if let Some(list) = &font_list {
+                 check_font_list(engine, list);
+             }
+             Ok(font_list.map(|font_list| font_list.v))
+         })?
     })]
     #[default(FontList(vec![FontFamily::new("Libertinus Serif")]))]
     #[ghost]
@@ -270,16 +273,20 @@ pub struct TextElem {
     /// This text is red.
     /// ```
     #[parse({
-        let paint: Option<Spanned<Paint>> = args.named_or_find("fill")?;
-        if let Some(paint) = &paint
-            && paint.v.relative() == Smart::Custom(RelativeTo::Self_) {
+         let paint_v: Option<Spanned<crate::foundations::DerivedOtherWay<Option<crate::foundations::Value>, Paint>>> = args.named_or_find("fill")?;
+         let paint = match paint_v.clone() {
+             None => None,
+             Some(Spanned{ v, span}) => Some(Spanned::new(v.derived, span))
+         };
+         if let Some(paint) = &paint
+             && paint.v.relative() == Smart::Custom(RelativeTo::Self_) {
                 bail!(
                     paint.span,
                     "gradients and tilings on text must be relative to the parent";
                     hint: "make sure to set `relative: auto` on your text fill";
                 );
-            }
-        paint.map(|paint| paint.v)
+         }
+         paint.map(|paint| crate::foundations::DerivedOtherWay::new(paint_v.and_then(|it| it.v.source), paint.v))
     })]
     #[default(Color::BLACK.into())]
     #[ghost]
@@ -1419,6 +1426,12 @@ pub fn language(styles: StyleChain) -> rustybuzz::Language {
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
 pub struct ItalicToggle(pub bool);
 
+impl crate::foundations::IntoValue for ItalicToggle {
+    fn into_value(self) -> crate::foundations::Value {
+        crate::foundations::Value::Bool(self.0)
+    }
+}
+
 impl Fold for ItalicToggle {
     fn fold(self, outer: Self) -> Self {
         Self(self.0 ^ outer.0)
@@ -1428,6 +1441,12 @@ impl Fold for ItalicToggle {
 /// A delta that is summed up when folded.
 #[derive(Debug, Default, Copy, Clone, Eq, PartialEq, Hash)]
 pub struct WeightDelta(pub i64);
+
+impl crate::foundations::IntoValue for WeightDelta {
+    fn into_value(self) -> crate::foundations::Value {
+        crate::foundations::Value::Int(self.0)
+    }
+}
 
 impl Fold for WeightDelta {
     fn fold(self, outer: Self) -> Self {

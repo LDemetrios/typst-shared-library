@@ -1,3 +1,5 @@
+// Modified by LDemetrios
+
 use crate::diag::{SourceResult, bail};
 use crate::engine::Engine;
 use crate::foundations::{
@@ -322,7 +324,7 @@ pub struct BlockElem {
     /// The spacing between this block and its predecessor.
     #[parse(
         let spacing = args.named("spacing")?;
-        args.named("above")?.or(spacing)
+        args.named("above")?.or(spacing.clone())
     )]
     pub above: Smart<Spacing>,
 

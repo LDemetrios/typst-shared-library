@@ -1,3 +1,5 @@
+// Modified by LDemetrios 
+
 use ecow::{EcoString, eco_format};
 use typst_syntax::{FileId, PathError, RootedPath, Spanned, VirtualRoot};
 
@@ -130,6 +132,8 @@ use crate::foundations::{Repr, Str, cast, func, scope, ty};
 #[ty(scope, name = "path")]
 #[derive(Debug, Clone, PartialEq, Hash)]
 type RootedPath;
+
+impl typst_library::foundations::DynValueMarker for RootedPath {}
 
 #[scope(ext)]
 impl RootedPath {

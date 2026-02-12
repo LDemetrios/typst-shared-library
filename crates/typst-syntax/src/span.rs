@@ -1,3 +1,5 @@
+// Modified by LDemetrios 
+
 use std::fmt::{self, Debug, Formatter};
 use std::num::{NonZeroU16, NonZeroU64};
 use std::ops::Range;
@@ -171,6 +173,12 @@ pub struct Spanned<T> {
     pub v: T,
     /// The value's location in source code.
     pub span: Span,
+}
+
+impl <T: fmt::Display> fmt::Display for Spanned<T> {
+    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+        self.v.fmt(f)
+    }
 }
 
 impl<T> Spanned<T> {

@@ -1,3 +1,5 @@
+// Modified by LDemetrios 
+
 use std::mem;
 use std::ops::{DerefMut, Index, IndexMut, Range};
 
@@ -85,7 +87,7 @@ pub(super) fn reparse_markup(
 /// headings, strong/emph, lists/enums, etc. This is also the entry point for
 /// parsing math equations and embedded code expressions.
 fn markup_expr(p: &mut Parser, at_start: bool, nesting: &mut usize) {
-    let Some(p) = &mut p.increase_depth() else { return };
+    let Some(p) = &mut  p.increase_depth() else { return };
 
     match p.current() {
         SyntaxKind::LeftBracket => {

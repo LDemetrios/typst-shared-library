@@ -1,3 +1,5 @@
+// Modified by LDemetrios 
+
 use codex::styling::{MathStyle, to_style};
 use ecow::EcoString;
 use typst_library::diag::SourceResult;
@@ -81,9 +83,9 @@ fn layout_inline_text(
         Ok(FrameFragment::new(props, styles, frame).with_text_like(true))
     } else {
         let local = [
-            TextElem::top_edge.set(TopEdge::Metric(TopEdgeMetric::Bounds)),
-            TextElem::bottom_edge.set(BottomEdge::Metric(BottomEdgeMetric::Bounds)),
-            TextElem::overhang.set(false),
+            TextElem::top_edge.set_internal(TopEdge::Metric(TopEdgeMetric::Bounds)),
+            TextElem::bottom_edge.set_internal(BottomEdge::Metric(BottomEdgeMetric::Bounds)),
+            TextElem::overhang.set_internal(false),
         ]
         .map(|p| p.wrap());
 

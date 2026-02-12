@@ -1,3 +1,5 @@
+// Modified by LDemetrios
+
 use crate::foundations::{Content, Smart, elem};
 use crate::introspection::{Locatable, Tagged};
 use crate::layout::{Abs, Corners, Length, Rel, Sides};
@@ -292,6 +294,17 @@ pub struct Decoration {
     pub extent: Abs,
 }
 
+impl typst_library::foundations::IntoValue for Decoration {
+    fn into_value(self) -> typst_library::foundations::Value {
+        typst_library::foundations::Value::Dict(
+            typst_library::foundations::dict!(
+                "line" => self.line.into_value(),
+                "extent" => self.extent.into_value(),
+            )
+        )
+    }
+}
+
 /// A kind of decorative line.
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]
 #[allow(clippy::large_enum_variant)]
@@ -320,4 +333,55 @@ pub enum DecoLine {
         bottom_edge: BottomEdge,
         radius: Corners<Rel<Abs>>,
     },
+}
+
+impl typst_library::foundations::IntoValue for DecoLine {
+    fn into_value(self) -> typst_library::foundations::Value {
+        match self {
+            DecoLine::Underline { stroke, offset, evade, background } => {
+                typst_library::foundations::Value::Dict(
+                    crate::__dict![
+                        "type" => typst_library::foundations::Value::Str("underline".into()),
+                        "stroke" => stroke.into_value(),
+                        "offset" => offset.into_value(),
+                        "evade" => typst_library::foundations::Value::Bool(evade),
+                        "background" => typst_library::foundations::Value::Bool(background),
+                    ]
+                )
+            }
+            DecoLine::Strikethrough { stroke, offset, background } => {
+                typst_library::foundations::Value::Dict(
+                    crate::__dict![
+                        "type" => typst_library::foundations::Value::Str("strikethrough".into()),
+                        "stroke" => stroke.into_value(),
+                        "offset" => offset.into_value(),
+                        "background" => typst_library::foundations::Value::Bool(background),
+                    ]
+                )
+            }
+            DecoLine::Overline { stroke, offset, evade, background } => {
+                typst_library::foundations::Value::Dict(
+                    crate::__dict![
+                        "type" => typst_library::foundations::Value::Str("overline".into()),
+                        "stroke" => stroke.into_value(),
+                        "offset" => offset.into_value(),
+                        "evade" => typst_library::foundations::Value::Bool(evade),
+                        "background" => typst_library::foundations::Value::Bool(background),
+                    ]
+                )
+            }
+            DecoLine::Highlight { fill, stroke, top_edge, bottom_edge, radius } => {
+                typst_library::foundations::Value::Dict(
+                    crate::__dict![
+                        "type" => typst_library::foundations::Value::Str("highlight".into()),
+                        "fill" => fill.into_value(),
+                        "stroke" => stroke.into_value(),
+                        "top_edge" => top_edge.into_value(),
+                        "bottom_edge" => bottom_edge.into_value(),
+                        "radius" => radius.into_value(),
+                    ]
+                )
+            }
+        }
+    }
 }

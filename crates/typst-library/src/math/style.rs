@@ -1,3 +1,5 @@
+// Modified by LDemetrios 
+
 use codex::styling::MathVariant;
 use ttf_parser::Tag;
 use typst_utils::LazyHash;
@@ -16,7 +18,7 @@ pub fn bold(
     /// The content to style.
     body: Content,
 ) -> Content {
-    body.set(EquationElem::bold, true)
+    body.set_internal(EquationElem::bold, true)
 }
 
 /// Upright (non-italic) font style in math.
@@ -29,7 +31,7 @@ pub fn upright(
     /// The content to style.
     body: Content,
 ) -> Content {
-    body.set(EquationElem::italic, Some(false))
+    body.set_internal(EquationElem::italic, Some(false))
 }
 
 /// Italic font style in math.
@@ -40,7 +42,7 @@ pub fn italic(
     /// The content to style.
     body: Content,
 ) -> Content {
-    body.set(EquationElem::italic, Some(true))
+    body.set_internal(EquationElem::italic, Some(true))
 }
 
 /// Serif (roman) font style in math.
@@ -51,7 +53,7 @@ pub fn serif(
     /// The content to style.
     body: Content,
 ) -> Content {
-    body.set(EquationElem::variant, Some(MathVariant::Plain))
+    body.set_internal(EquationElem::variant, Some(MathVariant::Plain))
 }
 
 /// Sans-serif font style in math.
@@ -64,7 +66,7 @@ pub fn sans(
     /// The content to style.
     body: Content,
 ) -> Content {
-    body.set(EquationElem::variant, Some(MathVariant::SansSerif))
+    body.set_internal(EquationElem::variant, Some(MathVariant::SansSerif))
 }
 
 /// Calligraphic (chancery) font style in math.
@@ -80,7 +82,7 @@ pub fn cal(
     /// The content to style.
     body: Content,
 ) -> Content {
-    body.set(EquationElem::variant, Some(MathVariant::Chancery))
+    body.set_internal(EquationElem::variant, Some(MathVariant::Chancery))
 }
 
 /// Script (roundhand) font style in math.
@@ -113,7 +115,7 @@ pub fn scr(
     /// The content to style.
     body: Content,
 ) -> Content {
-    body.set(EquationElem::variant, Some(MathVariant::Roundhand))
+    body.set_internal(EquationElem::variant, Some(MathVariant::Roundhand))
 }
 
 /// Fraktur font style in math.
@@ -126,7 +128,7 @@ pub fn frak(
     /// The content to style.
     body: Content,
 ) -> Content {
-    body.set(EquationElem::variant, Some(MathVariant::Fraktur))
+    body.set_internal(EquationElem::variant, Some(MathVariant::Fraktur))
 }
 
 /// Monospace font style in math.
@@ -139,7 +141,25 @@ pub fn mono(
     /// The content to style.
     body: Content,
 ) -> Content {
-    body.set(EquationElem::variant, Some(MathVariant::Monospace))
+    body.set_internal(EquationElem::variant, Some(MathVariant::Monospace))
+}
+
+impl crate::foundations::IntoValue for MathVariant {
+    fn into_value(self) -> crate::foundations::Value {
+        crate::foundations::Value::Str(
+            match self {
+                MathVariant::Plain => "plain",
+                MathVariant::Fraktur => "fraktur",
+                MathVariant::SansSerif => "sansserif",
+                MathVariant::Monospace => "monospace",
+                MathVariant::DoubleStruck => "doublestruck",
+                MathVariant::Chancery => "chancery",
+                MathVariant::Roundhand => "roundhand",
+                _ => panic!(),
+            }
+            .into(),
+        )
+    }
 }
 
 /// Blackboard bold (double-struck) font style in math.
@@ -157,7 +177,7 @@ pub fn bb(
     /// The content to style.
     body: Content,
 ) -> Content {
-    body.set(EquationElem::variant, Some(MathVariant::DoubleStruck))
+    body.set_internal(EquationElem::variant, Some(MathVariant::DoubleStruck))
 }
 
 /// Forced display style in math.
@@ -177,8 +197,8 @@ pub fn display(
     #[default(false)]
     cramped: bool,
 ) -> Content {
-    body.set(EquationElem::size, MathSize::Display)
-        .set(EquationElem::cramped, cramped)
+    body.set_internal(EquationElem::size, MathSize::Display)
+        .set_internal(EquationElem::cramped, cramped)
 }
 
 /// Forced inline (text) style in math.
@@ -199,8 +219,8 @@ pub fn inline(
     #[default(false)]
     cramped: bool,
 ) -> Content {
-    body.set(EquationElem::size, MathSize::Text)
-        .set(EquationElem::cramped, cramped)
+    body.set_internal(EquationElem::size, MathSize::Text)
+        .set_internal(EquationElem::cramped, cramped)
 }
 
 /// Forced script style in math.
@@ -220,8 +240,8 @@ pub fn script(
     #[default(true)]
     cramped: bool,
 ) -> Content {
-    body.set(EquationElem::size, MathSize::Script)
-        .set(EquationElem::cramped, cramped)
+    body.set_internal(EquationElem::size, MathSize::Script)
+        .set_internal(EquationElem::cramped, cramped)
 }
 
 /// Forced second script style in math.
@@ -242,8 +262,8 @@ pub fn sscript(
     #[default(true)]
     cramped: bool,
 ) -> Content {
-    body.set(EquationElem::size, MathSize::ScriptScript)
-        .set(EquationElem::cramped, cramped)
+    body.set_internal(EquationElem::size, MathSize::ScriptScript)
+        .set_internal(EquationElem::cramped, cramped)
 }
 
 /// The size of elements in an equation.
@@ -263,32 +283,32 @@ pub enum MathSize {
 
 /// Styles something as cramped.
 pub fn style_cramped() -> LazyHash<Style> {
-    EquationElem::cramped.set(true).wrap()
+    EquationElem::cramped.set_internal(true).wrap()
 }
 
 /// Sets flac OpenType feature.
 pub fn style_flac() -> LazyHash<Style> {
     TextElem::features
-        .set(FontFeatures(vec![(Tag::from_bytes(b"flac"), 1)]))
+        .set_internal(FontFeatures(vec![(Tag::from_bytes(b"flac"), 1)]))
         .wrap()
 }
 
 /// Sets dtls OpenType feature.
 pub fn style_dtls() -> LazyHash<Style> {
     TextElem::features
-        .set(FontFeatures(vec![(Tag::from_bytes(b"dtls"), 1)]))
+        .set_internal(FontFeatures(vec![(Tag::from_bytes(b"dtls"), 1)]))
         .wrap()
 }
 
 /// The style for subscripts in the current style.
 pub fn style_for_subscript(styles: StyleChain) -> [LazyHash<Style>; 2] {
-    [style_for_superscript(styles), EquationElem::cramped.set(true).wrap()]
+    [style_for_superscript(styles), EquationElem::cramped.set_internal(true).wrap()]
 }
 
 /// The style for superscripts in the current style.
 pub fn style_for_superscript(styles: StyleChain) -> LazyHash<Style> {
     EquationElem::size
-        .set(match styles.get(EquationElem::size) {
+        .set_internal(match styles.get(EquationElem::size) {
             MathSize::Display | MathSize::Text => MathSize::Script,
             MathSize::Script | MathSize::ScriptScript => MathSize::ScriptScript,
         })
@@ -298,7 +318,7 @@ pub fn style_for_superscript(styles: StyleChain) -> LazyHash<Style> {
 /// The style for numerators in the current style.
 pub fn style_for_numerator(styles: StyleChain) -> LazyHash<Style> {
     EquationElem::size
-        .set(match styles.get(EquationElem::size) {
+        .set_internal(match styles.get(EquationElem::size) {
             MathSize::Display => MathSize::Text,
             MathSize::Text => MathSize::Script,
             MathSize::Script | MathSize::ScriptScript => MathSize::ScriptScript,
@@ -308,5 +328,5 @@ pub fn style_for_numerator(styles: StyleChain) -> LazyHash<Style> {
 
 /// The style for denominators in the current style.
 pub fn style_for_denominator(styles: StyleChain) -> [LazyHash<Style>; 2] {
-    [style_for_numerator(styles), EquationElem::cramped.set(true).wrap()]
+    [style_for_numerator(styles), EquationElem::cramped.set_internal(true).wrap()]
 }

@@ -1,3 +1,5 @@
+// Modified by LDemetrios 
+
 use comemo::Track;
 use smallvec::smallvec;
 use typst_library::diag::SourceResult;
@@ -43,7 +45,7 @@ pub fn layout_list(
         if !tight {
             body += ParbreakElem::shared();
         }
-        let body = body.set(ListElem::depth, Depth(1));
+        let body = body.set_internal(ListElem::depth, Depth(1));
 
         cells.push(Cell::new(Content::empty()));
         cells.push(Cell::new(PdfMarkerTag::ListItemLabel(marker.clone())));
@@ -119,7 +121,8 @@ pub fn layout_enum(
 
         // Disable overhang as a workaround to end-aligned dots glitching
         // and decreasing spacing between numbers and items.
-        let resolved = resolved.aligned(number_align).set(TextElem::overhang, false);
+        let resolved =
+            resolved.aligned(number_align).set_internal(TextElem::overhang, false);
 
         // Text in wide enums shall always turn into paragraphs.
         let mut body = item.body.clone();
@@ -127,7 +130,7 @@ pub fn layout_enum(
             body += ParbreakElem::shared();
         }
 
-        let body = body.set(EnumElem::parents, smallvec![number]);
+        let body = body.set_internal(EnumElem::parents, smallvec![number]);
 
         cells.push(Cell::new(Content::empty()));
         cells.push(Cell::new(PdfMarkerTag::ListItemLabel(resolved)));

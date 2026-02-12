@@ -1,3 +1,5 @@
+// Modified by LDemetrios 
+
 use std::fmt::{self, Debug};
 use std::hash::Hash;
 use std::marker::PhantomData;
@@ -33,12 +35,26 @@ impl<E: NativeElement, const I: u8> Field<E, I> {
     /// Prefer [`Content::set`] or
     /// [`Styles::set`](crate::foundations::Styles::set) when working with
     /// existing content or style value.
-    pub fn set(self, value: E::Type) -> Property
+    pub fn set(
+        self,
+        value: crate::foundations::DerivedOtherWay<
+            Option<crate::foundations::Value>,
+            E::Type,
+        >,
+    ) -> Property
     where
         E: SettableProperty<I>,
-        E::Type: Debug + Clone + Hash + Send + Sync + 'static,
+        E::Type: Debug + Clone + Hash + Send + Sync + 'static + IntoValue,
     {
         Property::new(self, value)
+    }
+
+    pub fn set_internal(self, value: E::Type) -> Property
+    where
+        E: SettableProperty<I>,
+        E::Type: Debug + Clone + Hash + Send + Sync + 'static + IntoValue,
+    {
+        self.set(crate::foundations::DerivedOtherWay::new(None, value))
     }
 }
 
@@ -520,12 +536,27 @@ where
     }
 }
 
-impl<E: NativeElement, const I: u8> From<Option<E::Type>> for Settable<E, I>
+impl<E: NativeElement, const I: u8>
+    From<
+        Option<
+            crate::foundations::DerivedOtherWay<
+                Option<crate::foundations::Value>,
+                E::Type,
+            >,
+        >,
+    > for Settable<E, I>
 where
     E: SettableProperty<I>,
 {
-    fn from(value: Option<E::Type>) -> Self {
-        Self(value)
+    fn from(
+        value: Option<
+            crate::foundations::DerivedOtherWay<
+                Option<crate::foundations::Value>,
+                E::Type,
+            >,
+        >,
+    ) -> Self {
+        Self(value.map(|value| value.derived))
     }
 }
 

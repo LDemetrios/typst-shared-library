@@ -1,3 +1,5 @@
+// Modified by LDemetrios 
+
 use comemo::{Track, Tracked, TrackedMut};
 use typst_library::World;
 use typst_library::diag::SourceResult;
@@ -191,7 +193,7 @@ fn layout_page_run_impl(
     // Layouts a single marginal.
     let mut layout_marginal = |content: &Option<Content>, area, align| {
         let Some(content) = content else { return Ok(None) };
-        let aligned = content.clone().set(AlignElem::alignment, align);
+        let aligned = content.clone().set_internal(AlignElem::alignment, align);
         crate::layout_frame(
             &mut engine,
             &aligned,

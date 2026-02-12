@@ -1,3 +1,5 @@
+// Modified by LDemetrios 
+
 use std::cmp::Ordering;
 use std::fmt::{self, Debug, Formatter};
 use std::hash::{Hash, Hasher};
@@ -12,7 +14,7 @@ use crate::Numeric;
 ///
 /// All operations implemented for this type are cross-platform deterministic.
 #[derive(Default, Copy, Clone)]
-pub struct Scalar(f64);
+pub struct Scalar(pub f64);
 
 impl Scalar {
     /// The scalar containing `0.0`.

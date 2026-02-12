@@ -1,3 +1,5 @@
+// Modified by LDemetrios 
+
 use ecow::EcoString;
 
 use crate::foundations::{Repr, func, scope, ty};
@@ -30,6 +32,8 @@ pub enum Dir {
     /// Bottom to top.
     BTT,
 }
+
+impl typst_library::foundations::DynValueMarker for Dir {}
 
 impl Dir {
     /// Whether this direction points into the positive coordinate direction.

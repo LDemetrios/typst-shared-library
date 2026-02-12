@@ -1,3 +1,5 @@
+// Modified by LDemetrios 
+
 pub mod resolve;
 
 use std::num::{NonZeroU32, NonZeroUsize};
@@ -854,7 +856,7 @@ pub struct GridCell {
     pub stroke: Sides<Option<Option<Arc<Stroke>>>>,
 
     #[internal]
-    #[parse(Some(false))]
+    #[parse(Some(crate::foundations::DerivedOtherWay::new(None, false)))]
     pub is_repeated: bool,
 
     /// Whether rows spanned by this cell can be placed in different pages.

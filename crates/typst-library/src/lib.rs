@@ -1,3 +1,5 @@
+// Modified by LDemetrios 
+
 //! Typst's standard library.
 //!
 //! This crate also contains all of the compiler's central type definitions as
@@ -222,7 +224,7 @@ impl LibraryBuilder {
 ///
 /// Can be collected from an iterator of [`Feature`]s.
 #[derive(Debug, Default, Clone, Hash)]
-pub struct Features(SmallBitSet);
+pub struct Features(pub SmallBitSet);
 
 impl Features {
     /// Check whether the given feature is enabled.

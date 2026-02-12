@@ -1,3 +1,5 @@
+// Modified by LDemetrios 
+
 use comemo::Tracked;
 use typst_syntax::Span;
 
@@ -91,7 +93,9 @@ pub fn measure(
     let here = context.location().at(span)?;
     let link = LocatorLink::measure(here, span);
     let locator = Locator::link(&link);
-    let style = TargetElem::target.set(Target::Paged).wrap();
+    let style = TargetElem::target
+        .set(crate::foundations::backtrack_derived(Target::Paged))
+        .wrap();
 
     let frame = (engine.routines.layout_frame)(
         engine,

@@ -1,3 +1,5 @@
+// Modified by LDemetrios 
+
 use std::hash::Hash;
 use std::sync::Arc;
 
@@ -106,7 +108,7 @@ pub struct Tiling(Arc<TilingInner>);
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]
 struct TilingInner {
     /// The tiling's rendered content.
-    frame: LazyHash<Frame>,
+    frame: LazyHash<crate::foundations::Derived<Content, Frame>>,
     /// The tiling's tile size.
     size: Size,
     /// The tiling's tile spacing.
@@ -214,7 +216,7 @@ impl Tiling {
 
         Ok(Self(Arc::new(TilingInner {
             size: frame.size(),
-            frame: LazyHash::new(frame),
+            frame: LazyHash::new(crate::foundations::Derived::new(body, frame)),
             spacing: spacing.v.map(|l| l.abs),
             relative,
         })))
@@ -238,7 +240,12 @@ impl Tiling {
 
     /// Return the frame of the tiling.
     pub fn frame(&self) -> &Frame {
-        &self.0.frame
+        &self.0.frame.derived
+    }
+
+    /// Return the body of the tiling.
+    pub fn body(&self) -> &Content {
+        &self.0.frame.source
     }
 
     /// Return the size of the tiling in absolute units.
@@ -277,7 +284,9 @@ impl Repr for Tiling {
             out.push(')');
         }
 
-        out.push_str(", ..)");
+        out.push_str(", ");
+        out.push_str(&self.body().repr());
+        out.push(')');
 
         out
     }

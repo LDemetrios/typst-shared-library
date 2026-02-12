@@ -1,3 +1,5 @@
+// Modified by LDemetrios
+
 use crate::foundations::{Cast, Content, Str, cast, func};
 use crate::text::TextElem;
 
@@ -37,7 +39,9 @@ pub fn upper(
 fn case(text: Caseable, case: Case) -> Caseable {
     match text {
         Caseable::Str(v) => Caseable::Str(case.apply(&v).into()),
-        Caseable::Content(v) => Caseable::Content(v.set(TextElem::case, Some(case))),
+        Caseable::Content(v) => {
+            Caseable::Content(v.set_internal(TextElem::case, Some(case)))
+        }
     }
 }
 

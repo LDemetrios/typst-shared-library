@@ -1,3 +1,5 @@
+// Modified by LDemetrios
+
 use std::fmt::{self, Debug, Formatter};
 
 use typst_utils::Get;
@@ -142,6 +144,26 @@ impl<T: Reflect> Reflect for Corners<Option<T>> {
 
     fn castable(value: &Value) -> bool {
         Dict::castable(value) || T::castable(value)
+    }
+}
+
+impl IntoValue for Corners<typst_library::layout::Rel<typst_library::layout::Abs>> {
+    fn into_value(self) -> Value {
+        if self.is_uniform() {
+            return self.top_left.into_value();
+        }
+
+        let mut dict = Dict::new();
+        let mut handle = |key: &str, component: typst_library::layout::Rel<typst_library::layout::Abs>| {
+            dict.insert(key.into(), component.into_value());
+        };
+
+        handle("top-left", self.top_left);
+        handle("top-right", self.top_right);
+        handle("bottom-right", self.bottom_right);
+        handle("bottom-left", self.bottom_left);
+
+        Value::Dict(dict)
     }
 }
 

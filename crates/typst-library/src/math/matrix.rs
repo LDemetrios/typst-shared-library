@@ -1,3 +1,5 @@
+// Modified by LDemetrios
+
 use smallvec::{SmallVec, smallvec};
 use typst_syntax::Spanned;
 use typst_utils::{Numeric, default_math_class};
@@ -164,7 +166,7 @@ pub struct MatElem {
     /// ```
     #[parse(
         let gap = args.named("gap")?;
-        args.named("row-gap")?.or(gap)
+        args.named("row-gap")?.or(gap.clone())
     )]
     #[default(DEFAULT_ROW_GAP.into())]
     pub row_gap: Rel<Length>,

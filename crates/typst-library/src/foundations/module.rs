@@ -1,3 +1,5 @@
+// Modified by LDemetrios 
+
 use std::fmt::{self, Debug, Formatter};
 use std::sync::Arc;
 
@@ -51,7 +53,7 @@ pub struct Module {
     /// The module's name.
     name: Option<EcoString>,
     /// The reference-counted inner fields.
-    inner: Arc<ModuleInner>,
+    pub inner: Arc<ModuleInner>,
 }
 
 /// The internal representation of a [`Module`].
@@ -60,7 +62,7 @@ struct ModuleInner {
     /// The top-level definitions that were bound in this module.
     scope: Scope,
     /// The module's layoutable contents.
-    content: Content,
+    pub content: Content,
     /// The id of the file which defines the module, if any.
     file_id: Option<FileId>,
 }

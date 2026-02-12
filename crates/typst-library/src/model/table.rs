@@ -1,3 +1,5 @@
+// Modified by LDemetrios 
+
 use std::num::{NonZeroU32, NonZeroUsize};
 use std::sync::Arc;
 
@@ -19,6 +21,12 @@ use crate::model::Figurable;
 use crate::pdf::TableCellKind;
 use crate::text::LocalName;
 use crate::visualize::{Paint, Stroke};
+
+impl crate::foundations::IntoValue for TableCellKind {
+    fn into_value(self) -> crate::foundations::Value {
+        todo!()
+    }
+}
 
 /// A table of items.
 ///
@@ -773,11 +781,11 @@ pub struct TableCell {
     pub breakable: Smart<bool>,
 
     #[internal]
-    #[parse(Some(Smart::Auto))]
+    #[parse(Some(crate::foundations::DerivedOtherWay::new(None, Smart::Auto)))]
     pub kind: Smart<TableCellKind>,
 
     #[internal]
-    #[parse(Some(false))]
+    #[parse(Some(crate::foundations::DerivedOtherWay::new(None, false)))]
     pub is_repeated: bool,
 }
 

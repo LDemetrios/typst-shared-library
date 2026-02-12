@@ -1,3 +1,5 @@
+// Modified by LDemetrios 
+
 use std::num::NonZeroUsize;
 use std::str::FromStr;
 
@@ -324,8 +326,8 @@ impl Packed<FootnoteEntry> {
 impl ShowSet for Packed<FootnoteEntry> {
     fn show_set(&self, _: StyleChain) -> Styles {
         let mut out = Styles::new();
-        out.set(ParElem::leading, Em::new(0.5).into());
-        out.set(TextElem::size, TextSize(Em::new(0.85).into()));
+        out.set_internal(ParElem::leading, Em::new(0.5).into());
+        out.set_internal(TextElem::size, TextSize(Em::new(0.85).into()));
         out
     }
 }

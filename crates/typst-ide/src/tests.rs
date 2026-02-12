@@ -1,3 +1,5 @@
+// Modified by LDemetrios 
+
 use std::borrow::Borrow;
 use std::sync::Arc;
 
@@ -178,11 +180,15 @@ fn library() -> Library {
     let mut lib = typst::Library::builder()
         .with_features([Feature::Html].into_iter().collect())
         .build();
-    lib.styles.set(PageElem::width, Smart::Custom(Abs::pt(120.0).into()));
-    lib.styles.set(PageElem::height, Smart::Auto);
     lib.styles
-        .set(PageElem::margin, Margin::splat(Some(Smart::Custom(Abs::pt(10.0).into()))));
-    lib.styles.set(TextElem::size, TextSize(Abs::pt(10.0).into()));
+        .set_internal(PageElem::width, Smart::Custom(Abs::pt(120.0).into()));
+    lib.styles.set_internal(PageElem::height, Smart::Auto);
+    lib.styles.set_internal(
+        PageElem::margin,
+        Margin::splat(Some(Smart::Custom(Abs::pt(10.0).into()))),
+    );
+    lib.styles
+        .set_internal(TextElem::size, TextSize(Abs::pt(10.0).into()));
     lib
 }
 

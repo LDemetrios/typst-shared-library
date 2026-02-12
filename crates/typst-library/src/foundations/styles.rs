@@ -1,3 +1,5 @@
+// Modified by LDemetrios
+
 use std::any::{Any, TypeId};
 use std::fmt::{self, Debug, Formatter};
 use std::hash::{Hash, Hasher};
@@ -49,12 +51,28 @@ impl Styles {
     /// If the property needs folding and the value is already contained in the
     /// style map, `self` contributes the outer values and `value` is the inner
     /// one.
-    pub fn set<E, const I: u8>(&mut self, field: Field<E, I>, value: E::Type)
-    where
+    pub fn set<E, const I: u8>(
+        &mut self,
+        field: Field<E, I>,
+        value: crate::foundations::DerivedOtherWay<
+            Option<crate::foundations::Value>,
+            E::Type,
+        >,
+    ) where
         E: SettableProperty<I>,
-        E::Type: Debug + Clone + Hash + Send + Sync + 'static,
+        E::Type:
+            Debug + Clone + Hash + Send + Sync + 'static + crate::foundations::IntoValue,
     {
         self.push(Property::new(field, value));
+    }
+
+    pub fn set_internal<E, const I: u8>(&mut self, field: Field<E, I>, value: E::Type)
+    where
+        E: SettableProperty<I>,
+        E::Type:
+            Debug + Clone + Hash + Send + Sync + 'static + crate::foundations::IntoValue,
+    {
+        self.set(field, crate::foundations::DerivedOtherWay::new(None, value))
     }
 
     /// Add a new style to the list.
@@ -325,30 +343,36 @@ impl From<Recipe> for Style {
 #[derive(Clone, Hash)]
 pub struct Property {
     /// The element the property belongs to.
-    elem: Element,
+    pub elem: Element,
     /// The property's ID.
-    id: u8,
+    pub id: u8,
     /// The property's value.
-    value: Block,
+    pub value: Block,
+    /// The property's original value.
+    pub origin: Option<crate::foundations::Value>,
     /// The span of the set rule the property stems from.
-    span: Span,
+    pub span: Span,
     /// Whether the property is allowed to be lifted up to the page level.
-    liftable: bool,
+    pub liftable: bool,
     /// Whether the property was applied outside of any show rule.
-    outside: bool,
+    pub outside: bool,
 }
 
 impl Property {
     /// Create a new property from a key-value pair.
-    pub fn new<E, const I: u8>(_: Field<E, I>, value: E::Type) -> Self
+    pub fn new<E, const I: u8>(
+        _: Field<E, I>,
+        value: crate::foundations::DerivedOtherWay<Option<crate::foundations::Value>, E::Type>,
+    ) -> Self
     where
         E: SettableProperty<I>,
-        E::Type: Debug + Clone + Hash + Send + Sync + 'static,
+        E::Type: Debug + Clone + Hash + Send + Sync + 'static + crate::foundations::IntoValue,
     {
         Self {
             elem: E::ELEM,
             id: I,
-            value: Block::new(value),
+            value: Block::new(value.derived),
+            origin: value.source,
             span: Span::detached(),
             liftable: false,
             outside: false,
@@ -390,7 +414,7 @@ impl Debug for Property {
 /// therefore already on the heap or they will be small enough that we can just
 /// clone them.
 #[derive(Hash)]
-struct Block(Box<dyn Blockable>);
+pub struct Block(pub Box<dyn Blockable>);
 
 impl Block {
     /// Creates a new block.
@@ -423,15 +447,17 @@ impl Clone for Block {
 ///
 /// Auto derived for all types that implement [`Any`], [`Clone`], [`Hash`],
 /// [`Debug`], [`Send`] and [`Sync`].
-trait Blockable: Debug + Any + Send + Sync + 'static {
+pub trait Blockable: Debug + Any + Send + Sync + 'static + crate::foundations::IntoValue {
     /// Equivalent to [`Hash`] for the block.
     fn dyn_hash(&self, state: &mut dyn Hasher);
 
     /// Equivalent to [`Clone`] for the block.
     fn dyn_clone(&self) -> Block;
+
+    fn to_value(&self) -> crate::foundations::Value;
 }
 
-impl<T: Debug + Clone + Hash + Send + Sync + 'static> Blockable for T {
+impl<T: Debug + Clone + Hash + Send + Sync + 'static + crate::foundations::IntoValue> Blockable for T {
     fn dyn_hash(&self, mut state: &mut dyn Hasher) {
         // Also hash the TypeId since values with different types but
         // equal data should be different.
@@ -441,6 +467,10 @@ impl<T: Debug + Clone + Hash + Send + Sync + 'static> Blockable for T {
 
     fn dyn_clone(&self) -> Block {
         Block(Box::new(self.clone()))
+    }
+
+    fn to_value(&self) -> crate::foundations::Value {
+        self.clone().into_value()
     }
 }
 
@@ -465,7 +495,7 @@ pub struct Recipe {
     span: Span,
     /// Relevant properties of the kind of construct the style originated from
     /// and where it was applied.
-    outside: bool,
+    pub outside: bool,
 }
 
 impl Recipe {
@@ -965,6 +995,12 @@ impl<T: Fold> AlternativeFold for Option<T> {
 /// A type that accumulates depth when folded.
 #[derive(Debug, Default, Copy, Clone, PartialEq, Hash)]
 pub struct Depth(pub usize);
+
+impl crate::foundations::IntoValue for Depth {
+    fn into_value(self) -> crate::foundations::Value {
+        crate::foundations::Value::Int(self.0 as _)
+    }
+}
 
 impl Fold for Depth {
     fn fold(self, outer: Self) -> Self {

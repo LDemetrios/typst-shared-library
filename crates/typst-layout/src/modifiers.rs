@@ -1,3 +1,5 @@
+// Modified by LDemetrios 
+
 use typst_library::foundations::StyleChain;
 use typst_library::layout::{Abs, Fragment, Frame, FrameItem, HideElem, Point, Sides};
 use typst_library::model::{Destination, LinkElem, ParElem};
@@ -130,7 +132,7 @@ where
     let outer = styles;
     let mut styles = styles;
     if modifiers.dest.is_some() {
-        reset = LinkElem::current.set(None).wrap();
+        reset = LinkElem::current.set_internal(None).wrap();
         styles = outer.chain(&reset);
     }
 

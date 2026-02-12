@@ -1,3 +1,5 @@
+// Modified by LDemetrios 
+
 use typst_utils::{Numeric, singleton};
 
 use crate::foundations::{Content, NativeElement, cast, elem};
@@ -116,7 +118,7 @@ pub struct VElem {
     /// Whether the spacing collapses if not immediately preceded by a
     /// paragraph.
     #[internal]
-    #[parse(Some(false))]
+    #[parse(Some(crate::foundations::DerivedOtherWay::new(None, false)))]
     pub attach: bool,
 }
 

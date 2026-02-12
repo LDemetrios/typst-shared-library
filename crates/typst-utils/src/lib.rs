@@ -1,3 +1,5 @@
+// Modified by LDemetrios 
+
 //! Utilities for Typst.
 
 pub mod fat;
@@ -38,6 +40,49 @@ use std::ops::{Add, Deref, DerefMut, Div, Mul, Neg, Sub};
 use std::sync::Arc;
 
 use unicode_math_class::MathClass;
+
+
+#[macro_export]
+macro_rules! function_name {
+    () => {{
+        fn f() {}
+        let name = std::any::type_name_of_val(&f);
+        &name[..name.len() - 3] // Remove trailing "::f"
+    }};
+}
+
+#[macro_export]
+macro_rules! tick {
+    () => {
+        println!("{}/{}::{}:", file!(), $crate::function_name!(),  line!());
+    };
+    ($msg:expr) => {
+        println!("{}/{}::{}: {}", file!(), $crate::function_name!(), line!(), $msg);
+    };
+    ($fmt:expr, $($args:tt)*) => {
+        println!("{}/{}::{}: {}", file!(), $crate::function_name!(), line!(), format!($fmt, $($args)*));
+    };
+}
+
+#[macro_export]
+macro_rules! also_tick {
+    ($value:expr) => {{
+        let res = ($value);
+        tick!();
+        res
+    }};
+    ($value:expr, $msg:expr) => {{
+        let res = ($value);
+        tick!($msg);
+        res
+    }};
+    ($value:expr, $fmt:expr, $($args:tt)*) => {{
+        let res = ($value);
+        tick!($fmt, $($args)*);
+        res
+    }};
+}
+
 
 /// Turn a closure into a struct implementing [`Debug`].
 pub fn debug<F>(f: F) -> impl Debug

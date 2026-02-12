@@ -1,3 +1,5 @@
+// Modified by LDemetrios
+
 use comemo::Track;
 use ecow::{EcoVec, eco_format};
 use smallvec::smallvec;
@@ -114,11 +116,11 @@ const STRONG_RULE: ShowFn<StrongElem> = |elem, _, styles| {
     Ok(elem
         .body
         .clone()
-        .set(TextElem::delta, WeightDelta(elem.delta.get(styles))))
+        .set_internal(TextElem::delta, WeightDelta(elem.delta.get(styles))))
 };
 
 const EMPH_RULE: ShowFn<EmphElem> =
-    |elem, _, _| Ok(elem.body.clone().set(TextElem::emph, ItalicToggle(true)));
+    |elem, _, _| Ok(elem.body.clone().set_internal(TextElem::emph, ItalicToggle(true)));
 
 const LIST_RULE: ShowFn<ListElem> = |elem, _, styles| {
     let tight = elem.tight.get(styles);
@@ -198,7 +200,7 @@ const TERMS_RULE: ShowFn<TermsElem> = |elem, _, styles| {
         .pack()
         .spanned(span)
         .padded(padding)
-        .set(TermsElem::within, true);
+        .set_internal(TermsElem::within, true);
 
     if tight {
         let spacing = elem
@@ -228,12 +230,12 @@ const LINK_RULE: ShowFn<LinkElem> = |elem, engine, styles| {
     Ok(LinkMarker::new(body, Some(alt))
         .pack()
         .spanned(span)
-        .set(LinkElem::current, Some(dest)))
+        .set_internal(LinkElem::current, Some(dest)))
 };
 
 const DIRECT_LINK_RULE: ShowFn<DirectLinkElem> = |elem, _, _| {
     let dest = Destination::Location(elem.loc);
-    Ok(elem.body.clone().linked(dest, elem.alt.clone()))
+    Ok(elem.body.clone().linked(typst_library::foundations::DerivedOtherWay::new(None, dest), elem.alt.clone()))
 };
 
 const TITLE_RULE: ShowFn<TitleElem> = |elem, _, styles| {
@@ -456,7 +458,7 @@ const OUTLINE_ENTRY_RULE: ShowFn<OutlineEntry> = |elem, engine, styles| {
     };
 
     let loc = elem.element_location().at(span)?;
-    Ok(block.linked(Destination::Location(loc), Some(alt)))
+    Ok(block.linked(typst_library::foundations::DerivedOtherWay::new(None, Destination::Location(loc)), Some(alt)))
 };
 
 const REF_RULE: ShowFn<RefElem> = |elem, engine, styles| elem.realize(engine, styles);
@@ -529,7 +531,7 @@ const BIBLIOGRAPHY_RULE: ShowFn<BibliographyElem> = |elem, engine, styles| {
 };
 
 const CSL_LIGHT_RULE: ShowFn<CslLightElem> =
-    |elem, _, _| Ok(elem.body.clone().set(TextElem::delta, WeightDelta(-100)));
+    |elem, _, _| Ok(elem.body.clone().set_internal(TextElem::delta, WeightDelta(-100)));
 
 const CSL_INDENT_RULE: ShowFn<CslIndentElem> =
     |elem, _, _| Ok(PadElem::new(elem.body.clone()).pack());
@@ -573,7 +575,7 @@ fn show_script(
     kind: ScriptKind,
 ) -> SourceResult<Content> {
     let font_size = styles.resolve(TextElem::size);
-    Ok(body.set(
+    Ok(body.set_internal(
         TextElem::shift_settings,
         Some(ShiftSettings {
             typographic,
@@ -585,7 +587,7 @@ fn show_script(
 }
 
 const UNDERLINE_RULE: ShowFn<UnderlineElem> = |elem, _, styles| {
-    Ok(elem.body.clone().set(
+    Ok(elem.body.clone().set_internal(
         TextElem::deco,
         smallvec![Decoration {
             line: DecoLine::Underline {
@@ -600,7 +602,7 @@ const UNDERLINE_RULE: ShowFn<UnderlineElem> = |elem, _, styles| {
 };
 
 const OVERLINE_RULE: ShowFn<OverlineElem> = |elem, _, styles| {
-    Ok(elem.body.clone().set(
+    Ok(elem.body.clone().set_internal(
         TextElem::deco,
         smallvec![Decoration {
             line: DecoLine::Overline {
@@ -615,7 +617,7 @@ const OVERLINE_RULE: ShowFn<OverlineElem> = |elem, _, styles| {
 };
 
 const STRIKE_RULE: ShowFn<StrikeElem> = |elem, _, styles| {
-    Ok(elem.body.clone().set(
+    Ok(elem.body.clone().set_internal(
         TextElem::deco,
         smallvec![Decoration {
             // Note that we do not support evade option for strikethrough.
@@ -630,7 +632,7 @@ const STRIKE_RULE: ShowFn<StrikeElem> = |elem, _, styles| {
 };
 
 const HIGHLIGHT_RULE: ShowFn<HighlightElem> = |elem, _, styles| {
-    Ok(elem.body.clone().set(
+    Ok(elem.body.clone().set_internal(
         TextElem::deco,
         smallvec![Decoration {
             line: DecoLine::Highlight {
@@ -651,7 +653,7 @@ const HIGHLIGHT_RULE: ShowFn<HighlightElem> = |elem, _, styles| {
 
 const SMALLCAPS_RULE: ShowFn<SmallcapsElem> = |elem, _, styles| {
     let sc = if elem.all.get(styles) { Smallcaps::All } else { Smallcaps::Minuscules };
-    Ok(elem.body.clone().set(TextElem::smallcaps, Some(sc)))
+    Ok(elem.body.clone().set_internal(TextElem::smallcaps, Some(sc)))
 };
 
 const RAW_RULE: ShowFn<RawElem> = |elem, _, styles| {
@@ -748,7 +750,7 @@ const REPEAT_RULE: ShowFn<RepeatElem> = |elem, _, _| {
 };
 
 const HIDE_RULE: ShowFn<HideElem> =
-    |elem, _, _| Ok(elem.body.clone().set(HideElem::hidden, true));
+    |elem, _, _| Ok(elem.body.clone().set_internal(HideElem::hidden, true));
 
 const LAYOUT_RULE: ShowFn<LayoutElem> = |elem, _, _| {
     Ok(BlockElem::multi_layouter(

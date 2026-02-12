@@ -1,3 +1,5 @@
+// Modified by LDemetrios
+
 use typst_syntax::Spanned;
 
 use crate::diag::{At, HintedString, SourceResult, error};
@@ -97,13 +99,13 @@ pub struct CiteElem {
     ///   once with a short alias.
     /// - A path string or [`path`] to a [CSL file](https://citationstyles.org/).
     /// - Raw bytes from which a CSL style should be decoded.
-    #[parse(match args.named::<Spanned<Smart<CslSource>>>("style")? {
+    #[parse(args.named_derive_spanned::<Smart<CslSource>, _>("style", |style| Ok(match style {
         Some(Spanned { v: Smart::Custom(source), span }) => Some(Smart::Custom(
             CslStyle::load(engine, Spanned::new(source, span))?
         )),
         Some(Spanned { v: Smart::Auto, .. }) => Some(Smart::Auto),
         None => None,
-    })]
+    }))?)]
     pub style: Smart<Derived<CslSource, CslStyle>>,
 
     /// The text language setting where the citation is.

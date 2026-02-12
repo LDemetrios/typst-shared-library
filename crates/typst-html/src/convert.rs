@@ -1,3 +1,5 @@
+// Modified by LDemetrios
+
 use ecow::{EcoString, EcoVec, eco_vec};
 use typst_library::diag::{SourceResult, warning};
 use typst_library::engine::Engine;
@@ -130,7 +132,7 @@ fn handle(
         handle_text(converter, quote.into(), child.span());
     } else if let Some(elem) = child.to_packed::<FrameElem>() {
         let locator = converter.locator.next(&elem.span());
-        let style = TargetElem::target.set(Target::Paged).wrap();
+        let style = TargetElem::target.set_internal(Target::Paged).wrap();
         let frame = (converter.engine.routines.layout_frame)(
             converter.engine,
             &elem.body,
@@ -175,7 +177,7 @@ fn handle_html_elem(
         // hierarchy. Thus, we unset it for children if it is currently set.
         let unset;
         let styles = if role.is_some() {
-            unset = HtmlElem::role.set(None).wrap();
+            unset = HtmlElem::role.set_internal(None).wrap();
             styles.chain(&unset)
         } else {
             styles

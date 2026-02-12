@@ -1,3 +1,5 @@
+// Modified by LDemetrios
+
 #[rustfmt::skip]
 #[doc(inline)]
 pub use typst_macros::{cast, Cast};
@@ -175,6 +177,16 @@ impl<T: Reflect> Reflect for &mut T {
 pub trait IntoValue {
     /// Cast this type into a value.
     fn into_value(self) -> Value;
+}
+
+impl<A: IntoValue, B: IntoValue> IntoValue for (A, B) {
+    fn into_value(self) -> Value {
+        let (a, b) = self;
+        let mut x = typst_library::foundations::Array::new();
+        x.push(a.into_value());
+        x.push(b.into_value());
+        Value::Array(x)
+    }
 }
 
 impl IntoValue for Value {
@@ -535,10 +547,74 @@ pub struct Derived<S, D> {
     pub derived: D,
 }
 
+#[derive(Debug, Default, Copy, Clone, Eq, PartialEq, Hash)]
+pub struct DerivedOtherWay<S, D> {
+    /// The source portion.
+    pub source: S,
+    /// The derived portion.
+    pub derived: D,
+}
+
+impl<S: FromValue> FromValue for DerivedOtherWay<Option<Value>, S> {
+    fn from_value(value: Value) -> HintedStrResult<Self> {
+        S::from_value(value.clone())
+            .map(|it| DerivedOtherWay::new(Some(value.clone()), it))
+    }
+}
+
+pub fn backtrack_derived<D: IntoValue + Clone>(
+    derived: D,
+) -> DerivedOtherWay<Option<Value>, D> {
+    DerivedOtherWay::new(Some(derived.clone().into_value()), derived)
+}
+
+pub fn not_derived<D>(value: D) -> DerivedOtherWay<Option<Value>, D> {
+    DerivedOtherWay::new(None, value)
+}
+
+pub fn restore_derived<D: IntoValue + Clone>(
+    value: D,
+) -> DerivedOtherWay<Option<Value>, D> {
+    DerivedOtherWay::new(Some(value.clone().into_value()), value)
+}
+impl<S, D> DerivedOtherWay<S, D> {
+    /// Create a new instance from the `source` and the `derived` data.
+    pub fn new(source: S, derived: D) -> Self {
+        Self { source, derived }
+    }
+
+    pub fn map<T>(self, func: impl Fn(D) -> T) -> DerivedOtherWay<S, T> {
+        DerivedOtherWay::new(self.source, func(self.derived))
+    }
+}
+
+impl<S, D: Reflect> Reflect for DerivedOtherWay<S, D> {
+    fn input() -> CastInfo {
+        D::input()
+    }
+
+    fn output() -> CastInfo {
+        D::output()
+    }
+
+    fn castable(value: &Value) -> bool {
+        D::castable(value)
+    }
+
+    fn error(found: &Value) -> HintedString {
+        D::error(found)
+    }
+}
+
+
 impl<S, D> Derived<S, D> {
     /// Create a new instance from the `source` and the `derived` data.
     pub fn new(source: S, derived: D) -> Self {
         Self { source, derived }
+    }
+
+    pub fn map<T>(self, func: impl Fn(D) -> T) -> Derived<S, T> {
+        Derived::new(self.source, func(self.derived))
     }
 }
 

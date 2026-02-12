@@ -1,3 +1,5 @@
+// Modified by LDemetrios 
+
 mod accent;
 mod cancel;
 mod fenced;
@@ -583,7 +585,7 @@ fn layout_external(
 /// Styles to add font constants to the style chain.
 fn style_for_script_scale(font: &Font) -> LazyHash<Style> {
     EquationElem::script_scale
-        .set((
+        .set_internal((
             font.math().script_percent_scale_down,
             font.math().script_script_percent_scale_down,
         ))

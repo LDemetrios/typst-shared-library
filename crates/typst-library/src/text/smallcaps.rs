@@ -1,3 +1,5 @@
+// Modified by LDemetrios
+
 use crate::foundations::{Content, elem};
 
 /// Displays text in small capitals.
@@ -65,4 +67,14 @@ pub enum Smallcaps {
     Minuscules,
     /// All letters become small capitals.
     All,
+}
+
+impl crate::foundations::IntoValue for Smallcaps {
+    fn into_value(self) -> crate::foundations::Value {
+        match self {
+            Smallcaps::Minuscules => "minuscules",
+            Smallcaps::All => "all",
+        }
+        .into_value()
+    }
 }

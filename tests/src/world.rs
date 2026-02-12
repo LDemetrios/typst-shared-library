@@ -1,3 +1,5 @@
+// Modified by LDemetrios 
+
 use std::fs;
 use std::io::Write;
 use std::path::PathBuf;
@@ -171,11 +173,15 @@ fn library() -> Library {
         .define("forest", Color::from_u8(0x43, 0xA1, 0x27, 0xFF));
 
     // Hook up default styles.
-    lib.styles.set(PageElem::width, Smart::Custom(Abs::pt(120.0).into()));
-    lib.styles.set(PageElem::height, Smart::Auto);
     lib.styles
-        .set(PageElem::margin, Margin::splat(Some(Smart::Custom(Abs::pt(10.0).into()))));
-    lib.styles.set(TextElem::size, TextSize(Abs::pt(10.0).into()));
+        .set_internal(PageElem::width, Smart::Custom(Abs::pt(120.0).into()));
+    lib.styles.set_internal(PageElem::height, Smart::Auto);
+    lib.styles.set_internal(
+        PageElem::margin,
+        Margin::splat(Some(Smart::Custom(Abs::pt(10.0).into()))),
+    );
+    lib.styles
+        .set_internal(TextElem::size, TextSize(Abs::pt(10.0).into()));
 
     lib
 }

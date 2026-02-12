@@ -1,3 +1,5 @@
+// Modified by LDemetrios 
+
 mod element;
 mod field;
 mod packed;
@@ -81,7 +83,7 @@ use crate::text::UnderlineElem;
 #[ty(scope, cast)]
 #[derive(Clone, PartialEq, Hash)]
 #[repr(transparent)]
-pub struct Content(raw::RawContent);
+pub struct Content(pub raw::RawContent);
 
 impl Content {
     /// Creates a new content from an element.
@@ -338,12 +340,25 @@ impl Content {
     }
 
     /// Sets a style property on the content.
-    pub fn set<E, const I: u8>(self, field: Field<E, I>, value: E::Type) -> Self
+    pub fn set<E, const I: u8>(
+        self,
+        field: Field<E, I>,
+        value: crate::foundations::DerivedOtherWay<Option<Value>, E::Type>,
+    ) -> Self
     where
         E: SettableProperty<I>,
-        E::Type: Debug + Clone + Hash + Send + Sync + 'static,
+        E::Type: Debug + Clone + Hash + Send + Sync + 'static + IntoValue,
     {
         self.styled(Property::new(field, value))
+    }
+
+    /// Sets a style property on the content.
+    pub fn set_internal<E, const I: u8>(self, field: Field<E, I>, value: E::Type) -> Self
+    where
+        E: SettableProperty<I>,
+        E::Type: Debug + Clone + Hash + Send + Sync + 'static + IntoValue,
+    {
+        self.set(field, crate::foundations::DerivedOtherWay::new(None, value))
     }
 
     /// Style this content with a style entry.
@@ -465,17 +480,21 @@ impl Content {
     }
 
     /// Link the content somewhere.
-    pub fn linked(self, dest: Destination, alt: Option<EcoString>) -> Self {
+    pub fn linked(
+        self,
+        dest: crate::foundations::DerivedOtherWay<Option<Value>, Destination>,
+        alt: Option<EcoString>,
+    ) -> Self {
         let span = self.span();
         LinkMarker::new(self, alt)
             .pack()
             .spanned(span)
-            .set(LinkElem::current, Some(dest))
+            .set(LinkElem::current, dest.map(|it| Some(it)))
     }
 
     /// Set alignments for this content.
     pub fn aligned(self, align: Alignment) -> Self {
-        self.set(AlignElem::alignment, align)
+        self.set(AlignElem::alignment, crate::foundations::restore_derived(align))
     }
 
     /// Pad this content at the sides.

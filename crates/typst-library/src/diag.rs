@@ -1,3 +1,5 @@
+// Modified by LDemetrios 
+
 //! Diagnostics.
 
 use std::backtrace::{Backtrace, BacktraceStatus};
@@ -203,7 +205,7 @@ pub struct SourceDiagnostic {
 }
 
 /// The severity of a [`SourceDiagnostic`].
-#[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Hash, serde::Serialize, serde::Deserialize)]
 pub enum Severity {
     /// A fatal error.
     Error,
@@ -483,7 +485,7 @@ impl<T> Hint<T> for HintedStrResult<T> {
 pub type FileResult<T> = Result<T, FileError>;
 
 /// An error that occurred while trying to load a file.
-#[derive(Debug, Clone, Eq, PartialEq, Hash)]
+#[derive(Debug, Clone, Eq, PartialEq, Hash, serde::Serialize, serde::Deserialize)]
 pub enum FileError {
     /// A file was not found at this path.
     NotFound(PathBuf),
@@ -568,7 +570,7 @@ pub type PackageResult<T> = Result<T, PackageError>;
 /// An error that occurred while trying to load a package.
 ///
 /// Some variants have an optional string can give more details, if available.
-#[derive(Debug, Clone, Eq, PartialEq, Hash)]
+#[derive(Debug, Clone, Eq, PartialEq, Hash, serde::Serialize, serde::Deserialize)]
 pub enum PackageError {
     /// The specified package does not exist.
     NotFound(PackageSpec),

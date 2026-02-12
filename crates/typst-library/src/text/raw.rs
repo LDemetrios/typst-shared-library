@@ -1,3 +1,5 @@
+// Modified by LDemetrios 
+
 use std::cell::LazyCell;
 use std::ops::Range;
 use std::sync::{Arc, LazyLock};
@@ -251,10 +253,12 @@ pub struct RawElem {
     ///     (* x (factorial (- x 1)))))
     /// ```
     /// ````
-    #[parse(match args.named("syntaxes")? {
-        Some(sources) => Some(RawSyntax::load(engine.world, sources)?),
-        None => None,
-    })]
+    #[parse(args.named_derive_spanned::<OneOrMultiple<DataSource>, _>("syntaxes", |syntaxes| {
+        Ok(match syntaxes {
+            Some(sources) => Some(RawSyntax::load(engine.world, sources)?),
+            None => None,
+        })
+    })?)]
     #[fold]
     pub syntaxes: Derived<OneOrMultiple<DataSource>, Vec<RawSyntax>>,
 
@@ -289,14 +293,14 @@ pub struct RawElem {
     /// #let hi = "Hello World"
     /// ```
     /// ````
-    #[parse(match args.named::<Spanned<Smart<Option<DataSource>>>>("theme")? {
+    #[parse(args.named_derive_spanned::<Smart<Option<DataSource>>, _>("theme", |theme| Ok(match theme {
         Some(Spanned { v: Smart::Custom(Some(source)), span }) => Some(Smart::Custom(
             Some(RawTheme::load(engine.world, Spanned::new(source, span))?)
         )),
         Some(Spanned { v: Smart::Custom(None), .. }) => Some(Smart::Custom(None)),
         Some(Spanned { v: Smart::Auto, .. }) => Some(Smart::Auto),
         None => None,
-    })]
+    }))?)]
     pub theme: Smart<Option<Derived<DataSource, RawTheme>>>,
 
     /// The size for a tab stop in spaces. A tab is replaced with enough spaces to
@@ -495,14 +499,17 @@ impl Packed<RawElem> {
 impl ShowSet for Packed<RawElem> {
     fn show_set(&self, styles: StyleChain) -> Styles {
         let mut out = Styles::new();
-        out.set(TextElem::overhang, false);
-        out.set(TextElem::lang, Lang::ENGLISH);
-        out.set(TextElem::hyphenate, Smart::Custom(false));
-        out.set(TextElem::size, TextSize(Em::new(0.8).into()));
-        out.set(TextElem::font, FontList(vec![FontFamily::new("DejaVu Sans Mono")]));
-        out.set(TextElem::cjk_latin_spacing, Smart::Custom(None));
+        out.set_internal(TextElem::overhang, false);
+        out.set_internal(TextElem::lang, Lang::ENGLISH);
+        out.set_internal(TextElem::hyphenate, Smart::Custom(false));
+        out.set_internal(TextElem::size, TextSize(Em::new(0.8).into()));
+        out.set_internal(
+            TextElem::font,
+            FontList(vec![FontFamily::new("DejaVu Sans Mono")]),
+        );
+        out.set_internal(TextElem::cjk_latin_spacing, Smart::Custom(None));
         if self.block.get(styles) {
-            out.set(ParElem::justify, false);
+            out.set_internal(ParElem::justify, false);
         }
         out
     }
@@ -841,14 +848,14 @@ fn styled(
     let mut body = TextElem::packed(piece).spanned(span);
 
     if span_offset > 0 {
-        body = body.set(TextElem::span_offset, span_offset);
+        body = body.set_internal(TextElem::span_offset, span_offset);
     }
 
     if style.foreground != foreground {
         let color = to_typst(style.foreground);
         body = match target {
             Target::Html => (routines.html_span_filled)(body, color),
-            Target::Paged => body.set(TextElem::fill, color.into()),
+            Target::Paged => body.set_internal(TextElem::fill, color.into()),
         };
     }
 

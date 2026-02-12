@@ -1,3 +1,5 @@
+// Modified by LDemetrios 
+
 use std::num::NonZeroUsize;
 use std::str::FromStr;
 
@@ -397,13 +399,16 @@ impl<T> OutlineNode<T> {
 impl ShowSet for Packed<OutlineElem> {
     fn show_set(&self, styles: StyleChain) -> Styles {
         let mut out = Styles::new();
-        out.set(HeadingElem::outlined, false);
-        out.set(HeadingElem::numbering, None);
-        out.set(ParElem::justify, false);
-        out.set(BlockElem::above, Smart::Custom(styles.get(ParElem::leading).into()));
+        out.set_internal(HeadingElem::outlined, false);
+        out.set_internal(HeadingElem::numbering, None);
+        out.set_internal(ParElem::justify, false);
+        out.set_internal(
+            BlockElem::above,
+            Smart::Custom(styles.get(ParElem::leading).into()),
+        );
         // Makes the outline itself available to its entries. Should be
         // superseded by a proper ancestry mechanism in the future.
-        out.set(OutlineEntry::parent, Some(self.clone()));
+        out.set_internal(OutlineEntry::parent, Some(self.clone()));
         out
     }
 }

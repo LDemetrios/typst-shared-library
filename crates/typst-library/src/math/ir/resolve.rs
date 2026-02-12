@@ -1,3 +1,5 @@
+// Modified by LDemetrios
+
 use codex::styling::{MathStyle, to_style};
 use ecow::EcoString;
 use typst_syntax::{Span, is_newline};
@@ -991,7 +993,7 @@ fn resolve_class<'a, 'v, 'e>(
     styles: StyleChain<'a>,
 ) -> SourceResult<()> {
     let styles =
-        ctx.chain_styles(styles, EquationElem::class.set(Some(elem.class)).wrap());
+        ctx.chain_styles(styles, EquationElem::class.set_internal(Some(elem.class)).wrap());
     let mut item = ctx.resolve_into_item(&elem.body, styles)?;
     item.set_class(elem.class);
     item.set_limits(Limits::for_class(elem.class));
@@ -1032,7 +1034,7 @@ fn resolve_root<'a, 'v, 'e>(
     };
     let index = {
         let sscript =
-            ctx.store_styles(EquationElem::size.set(MathSize::ScriptScript).wrap());
+            ctx.store_styles(EquationElem::size.set_internal(MathSize::ScriptScript).wrap());
         elem.index
             .get_ref(styles)
             .as_ref()

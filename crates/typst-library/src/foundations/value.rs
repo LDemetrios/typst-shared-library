@@ -1,3 +1,5 @@
+// Modified by LDemetrios 
+
 use std::any::{Any, TypeId};
 use std::cmp::Ordering;
 use std::fmt::{self, Debug, Formatter};
@@ -92,7 +94,15 @@ impl Value {
     /// Create a new dynamic value.
     pub fn dynamic<T>(any: T) -> Self
     where
-        T: Debug + Repr + NativeType + PartialEq + Hash + Sync + Send + 'static,
+        T: Debug
+            + Repr
+            + NativeType
+            + PartialEq
+            + Hash
+            + Sync
+            + Send
+            + 'static
+            + DynValueMarker,
     {
         Self::Dyn(Dynamic::new(any))
     }
@@ -500,7 +510,15 @@ impl Dynamic {
     /// Create a new instance from any value that satisfies the required bounds.
     pub fn new<T>(any: T) -> Self
     where
-        T: Debug + Repr + NativeType + PartialEq + Hash + Sync + Send + 'static,
+        T: Debug
+            + Repr
+            + NativeType
+            + PartialEq
+            + Hash
+            + Sync
+            + Send
+            + 'static
+            + DynValueMarker,
     {
         Self(Arc::new(any))
     }
@@ -541,7 +559,9 @@ impl PartialEq for Dynamic {
     }
 }
 
-trait Bounds: Debug + Repr + Any + Sync + Send + 'static {
+pub trait DynValueMarker {}
+
+trait Bounds: Debug + Repr + Any + Sync + Send + 'static + DynValueMarker {
     fn dyn_eq(&self, other: &Dynamic) -> bool;
     fn dyn_ty(&self) -> Type;
     fn dyn_hash(&self, state: &mut dyn Hasher);
@@ -549,7 +569,15 @@ trait Bounds: Debug + Repr + Any + Sync + Send + 'static {
 
 impl<T> Bounds for T
 where
-    T: Debug + Repr + NativeType + PartialEq + Hash + Sync + Send + 'static,
+    T: Debug
+        + Repr
+        + NativeType
+        + PartialEq
+        + Hash
+        + Sync
+        + Send
+        + 'static
+        + DynValueMarker,
 {
     fn dyn_eq(&self, other: &Dynamic) -> bool {
         let Some(other) = other.downcast::<Self>() else { return false };

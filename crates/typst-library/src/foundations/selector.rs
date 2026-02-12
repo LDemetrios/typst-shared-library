@@ -1,3 +1,5 @@
+// Modified by LDemetrios 
+
 use std::any::{Any, TypeId};
 use std::sync::Arc;
 
@@ -276,6 +278,8 @@ impl Repr for Selector {
         }
     }
 }
+
+impl typst_library::foundations::DynValueMarker for Selector {}
 
 cast! {
     type Selector,

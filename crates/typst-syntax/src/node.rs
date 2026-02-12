@@ -1,3 +1,5 @@
+// Modified by LDemetrios 
+
 use std::fmt::{self, Debug, Display, Formatter};
 use std::ops::{Deref, Range};
 use std::rc::Rc;
@@ -103,6 +105,16 @@ impl SyntaxNode {
     pub fn into_text(self) -> EcoString {
         match self.0 {
             NodeKind::Leaf(leaf) => leaf.text,
+            NodeKind::Inner(inner) => {
+                inner.children.iter().cloned().map(Self::into_text).collect()
+            }
+            NodeKind::Error(node) => node.text.clone(),
+        }
+    }
+
+    pub fn to_text_ref(&self) -> EcoString {
+        match &self.0 {
+            NodeKind::Leaf(leaf) => leaf.text.clone(),
             NodeKind::Inner(inner) => {
                 inner.children.iter().cloned().map(Self::into_text).collect()
             }

@@ -1,3 +1,5 @@
+// Modified by LDemetrios 
+
 use std::fmt::{self, Debug, Formatter};
 use std::num::NonZeroUsize;
 
@@ -75,6 +77,8 @@ impl Location {
         Self(typst_utils::hash128(&(self.0, n)))
     }
 }
+
+impl crate::foundations::DynValueMarker for Location {}
 
 #[scope]
 impl Location {

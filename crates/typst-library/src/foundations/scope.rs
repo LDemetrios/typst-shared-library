@@ -1,3 +1,5 @@
+// Modified by LDemetrios 
+
 use std::fmt::{self, Debug, Formatter};
 use std::hash::{Hash, Hasher};
 
@@ -177,6 +179,11 @@ impl Scope {
             panic!("duplicate definition: {name}");
         }
 
+        self.define_unchecked(name, value)
+    }
+
+    #[track_caller]
+    pub fn define_unchecked(&mut self, name: &'static str, value: impl IntoValue) -> &mut Binding {
         let mut binding = Binding::detached(value);
         binding.category = self.category;
         self.bind(name.into(), binding)

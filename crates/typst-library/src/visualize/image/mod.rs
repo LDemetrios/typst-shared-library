@@ -1,3 +1,5 @@
+// Modified by LDemetrios 
+
 //! Image handling.
 
 mod pdf;
@@ -188,13 +190,18 @@ pub struct ImageElem {
     ///
     /// ICC profiles define how to interpret the colors in an image. When set
     /// to `{auto}`, Typst will try to extract an ICC profile from the image.
-    #[parse(match args.named::<Spanned<Smart<DataSource>>>("icc")? {
-        Some(Spanned { v: Smart::Custom(source), span }) => Some(Smart::Custom({
-            let loaded = Spanned::new(&source, span).load(engine.world)?;
-            Derived::new(source, loaded.data)
-        })),
-        Some(Spanned { v: Smart::Auto, .. }) => Some(Smart::Auto),
-        None => None,
+    #[parse({
+        let icc = args.named::<Spanned<crate::foundations::DerivedOtherWay<Option<crate::foundations::Value>, Smart<DataSource>>>>("icc")?;
+        match icc.clone() {
+            None => None,
+            Some(Spanned { v: crate::foundations::DerivedOtherWay { derived: Smart::Auto, .. }, .. }) => Some(Smart::Auto),
+            Some(Spanned { v: crate::foundations::DerivedOtherWay { derived: Smart::Custom(source), .. }, span }) => {
+                Some(Smart::Custom({
+                    let loaded = Spanned::new(&source, span).load(engine.world)?;
+                    Derived::new(source, loaded.data)
+                }))
+            }
+        }.map(|it| crate::foundations::DerivedOtherWay::new(icc.and_then(|it| it.v.source), it))
     })]
     pub icc: Smart<Derived<DataSource, Bytes>>,
 

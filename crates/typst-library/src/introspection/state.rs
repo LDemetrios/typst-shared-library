@@ -1,3 +1,5 @@
+// Modified by LDemetrios 
+
 use comemo::{Track, Tracked, TrackedMut};
 use ecow::{EcoString, EcoVec, eco_format, eco_vec};
 use typst_syntax::Span;
@@ -193,6 +195,8 @@ pub struct State {
     init: Value,
 }
 
+impl crate::foundations::DynValueMarker for State {}
+
 impl State {
     /// Create a new state identified by a key.
     pub fn new(key: Str, init: Value) -> State {
@@ -207,6 +211,14 @@ impl State {
     /// Selects all state updates.
     pub fn select_any() -> Selector {
         StateUpdateElem::ELEM.select()
+    }
+
+    pub fn key(&self) -> Str {
+        self.key.clone()
+    }
+    
+    pub fn init(&self) -> Value {
+        self.init.clone()
     }
 }
 
@@ -382,6 +394,10 @@ pub enum StateUpdate {
 
 cast! {
     StateUpdate,
+    self => match self {
+        Self::Set(v) => v,
+        Self::Func(v) => Value::Func(v),
+    },
     v: Func => Self::Func(v),
     v: Value => Self::Set(v),
 }
@@ -395,7 +411,6 @@ pub struct StateUpdateElem {
 
     /// The update to perform on the state.
     #[required]
-    #[internal]
     update: StateUpdate,
 }
 

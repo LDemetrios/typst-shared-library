@@ -1,3 +1,5 @@
+// Modified by LDemetrios 
+
 use crate::introspection::Tagged;
 use ttf_parser::Tag;
 
@@ -142,10 +144,30 @@ pub struct ShiftSettings {
     pub kind: ScriptKind,
 }
 
+impl crate::foundations::IntoValue for ShiftSettings {
+    fn into_value(self) -> crate::foundations::Value {
+        crate::foundations::Value::Dict(crate::__dict![
+            "typographic" => self.typographic.into_value(),
+            "shift" => self.shift.into_value(),
+            "size" => self.size.into_value(),
+            "kind" => self.kind.into_value(),
+        ])
+    }
+}
+
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
 pub enum ScriptKind {
     Sub,
     Super,
+}
+
+impl crate::foundations::IntoValue for ScriptKind {
+    fn into_value(self) -> crate::foundations::Value {
+        match self {
+            ScriptKind::Sub => "sub".into_value(),
+            ScriptKind::Super => "super".into_value(),
+        }
+    }
 }
 
 impl ScriptKind {

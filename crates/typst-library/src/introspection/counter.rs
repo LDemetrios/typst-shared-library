@@ -1,3 +1,5 @@
+// Modified by LDemetrios
+
 use std::fmt::Write;
 use std::num::NonZeroUsize;
 use std::str::FromStr;
@@ -207,7 +209,9 @@ use crate::routines::Routines;
 /// doesn't just use normal variables for counters.
 #[ty(scope)]
 #[derive(Debug, Clone, PartialEq, Hash)]
-pub struct Counter(CounterKey);
+pub struct Counter(pub CounterKey);
+
+impl typst_library::foundations::DynValueMarker for Counter {}
 
 impl Counter {
     /// Create a new counter identified by a key.
@@ -643,8 +647,17 @@ pub struct CounterUpdateElem {
 
     /// The update to perform on the counter.
     #[required]
-    #[internal]
     update: CounterUpdate,
+}
+
+impl IntoValue for CounterUpdate {
+    fn into_value(self) -> Value {
+        match self {
+            CounterUpdate::Set(x) => x.into_value(),
+            CounterUpdate::Step(x) => Value::Dict(crate::__dict!("step" => x.into_value())),
+            CounterUpdate::Func(x) => x.into_value()
+        }
+    }
 }
 
 impl Construct for CounterUpdateElem {

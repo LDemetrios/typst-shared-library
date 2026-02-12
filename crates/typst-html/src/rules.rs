@@ -1,3 +1,5 @@
+// Modified by LDemetrios 
+
 use std::num::NonZeroUsize;
 
 use comemo::{Track, Tracked};
@@ -341,7 +343,7 @@ const FOOTNOTE_RULE: ShowFn<FootnoteElem> = |elem, engine, styles| {
     let link = elem.realize(engine, styles)?;
     let sup = SuperElem::new(link)
         .pack()
-        .styled(HtmlElem::role.set(Some("doc-noteref".into())))
+        .styled(HtmlElem::role.set_internal(Some("doc-noteref".into())))
         .spanned(span);
 
     // Indicates the presence of a default footnote rule to emit an error when
@@ -440,7 +442,7 @@ const FOOTNOTE_ENTRY_RULE: ShowFn<FootnoteEntry> = |elem, engine, styles| {
     // The prefix is a link back to the first footnote reference, so
     // `doc-backlink` is the appropriate ARIA role.
     let prefix = sup
-        .styled(HtmlElem::role.set(Some("doc-backlink".into())))
+        .styled(HtmlElem::role.set_internal(Some("doc-backlink".into())))
         .spanned(elem.span());
 
     // We do not use the ARIA role `doc-footnote` because it "is only for
@@ -519,7 +521,7 @@ const REF_RULE: ShowFn<RefElem> = |elem, engine, styles| elem.realize(engine, st
 const CITE_GROUP_RULE: ShowFn<CiteGroup> = |elem, engine, _| {
     Ok(elem
         .realize(engine)?
-        .styled(HtmlElem::role.set(Some("doc-biblioref".into()))))
+        .styled(HtmlElem::role.set_internal(Some("doc-biblioref".into()))))
 };
 
 // For the bibliography, we have a few elements that should be styled (e.g.
@@ -538,7 +540,7 @@ const BIBLIOGRAPHY_RULE: ShowFn<BibliographyElem> = |elem, engine, styles| {
             // If we have a link back to the first citation referencing this
             // entry, attach the appropriate role.
             if prefix.is::<DirectLinkElem>() {
-                prefix = prefix.set(HtmlElem::role, Some("doc-backlink".into()));
+                prefix = prefix.set_internal(HtmlElem::role, Some("doc-backlink".into()));
             }
 
             let wrapped = HtmlElem::new(tag::span)

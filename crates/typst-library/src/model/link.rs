@@ -1,3 +1,5 @@
+// Modified by LDemetrios 
+
 use std::ops::Deref;
 use std::str::FromStr;
 
@@ -164,7 +166,7 @@ impl LinkElem {
 impl ShowSet for Packed<LinkElem> {
     fn show_set(&self, _: StyleChain) -> Styles {
         let mut out = Styles::new();
-        out.set(TextElem::hyphenate, Smart::Custom(false));
+        out.set_internal(TextElem::hyphenate, Smart::Custom(false));
         out
     }
 }

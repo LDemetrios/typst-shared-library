@@ -1,3 +1,5 @@
+// Modified by LDemetrios 
+
 use std::num::NonZeroUsize;
 
 use ecow::EcoString;
@@ -288,11 +290,11 @@ impl ShowSet for Packed<HeadingElem> {
         let below = Em::new(0.75) / scale;
 
         let mut out = Styles::new();
-        out.set(TextElem::size, TextSize(size.into()));
-        out.set(TextElem::weight, FontWeight::BOLD);
-        out.set(BlockElem::above, Smart::Custom(above.into()));
-        out.set(BlockElem::below, Smart::Custom(below.into()));
-        out.set(BlockElem::sticky, true);
+        out.set_internal(TextElem::size, TextSize(size.into()));
+        out.set_internal(TextElem::weight, FontWeight::BOLD);
+        out.set_internal(BlockElem::above, Smart::Custom(above.into()));
+        out.set_internal(BlockElem::below, Smart::Custom(below.into()));
+        out.set_internal(BlockElem::sticky, true);
         out
     }
 }

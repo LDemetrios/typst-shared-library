@@ -1,3 +1,5 @@
+// Modified by LDemetrios
+
 use std::cell::{LazyCell, RefCell};
 use std::fmt::{self, Debug, Formatter};
 use std::hash::Hash;
@@ -638,7 +640,7 @@ impl PlacedChild<'_> {
     pub fn layout(&self, engine: &mut Engine, base: Size) -> SourceResult<Frame> {
         self.cell.get_or_init(base, |base| {
             let align = self.alignment.unwrap_or_else(|| Alignment::CENTER);
-            let aligned = AlignElem::alignment.set(align).wrap();
+            let aligned = AlignElem::alignment.set_internal(align).wrap();
             let styles = self.styles.chain(&aligned);
 
             let mut frame = layout_and_modify(styles, |styles| {

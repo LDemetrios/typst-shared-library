@@ -1,3 +1,5 @@
+// Modified by LDemetrios 
+
 use std::ops::Add;
 
 use ecow::{EcoString, eco_format};
@@ -144,6 +146,8 @@ pub enum Alignment {
     V(VAlignment),
     Both(HAlignment, VAlignment),
 }
+
+impl typst_library::foundations::DynValueMarker for Alignment {}
 
 impl Alignment {
     /// The horizontal component.

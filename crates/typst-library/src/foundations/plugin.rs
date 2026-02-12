@@ -1,3 +1,5 @@
+// Modified by LDemetrios 
+
 use std::fmt::{self, Debug, Formatter};
 use std::hash::{Hash, Hasher};
 use std::sync::{Arc, Mutex};
@@ -207,7 +209,7 @@ impl plugin {
 #[derive(Debug, Clone, PartialEq, Hash)]
 pub struct PluginFunc {
     /// The underlying plugin, shared by this and the other functions.
-    plugin: Arc<Plugin>,
+    pub plugin: Arc<Plugin>,
     /// The name of the plugin function.
     name: EcoString,
 }
@@ -241,7 +243,7 @@ cast! {
 
 /// A plugin with potentially multiple instances for multi-threaded
 /// execution.
-struct Plugin {
+pub struct Plugin {
     /// Shared by all variants of the plugin.
     base: Arc<PluginBase>,
     /// A pool of plugin instances.

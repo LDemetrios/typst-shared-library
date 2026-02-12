@@ -1,3 +1,5 @@
+// Modified by LDemetrios 
+
 use std::num::NonZeroUsize;
 use std::ops::RangeInclusive;
 use std::str::FromStr;
@@ -75,8 +77,9 @@ pub struct PageElem {
     /// ```
     #[parse(
         let paper = args.named_or_find::<Paper>("paper")?;
-        args.named("width")?
+        args.named_derive("width", |width| Ok(width
             .or_else(|| paper.map(|paper| Smart::Custom(paper.width().into())))
+        ))?
     )]
     #[default(Smart::Custom(Paper::A4.width().into()))]
     #[ghost]
@@ -90,8 +93,9 @@ pub struct PageElem {
     /// for the height of the page to dynamically grow and shrink to fit their
     /// content.
     #[parse(
-        args.named("height")?
-            .or_else(|| paper.map(|paper| Smart::Custom(paper.height().into())))
+        args.named_derive("height", |height| Ok(height
+                    .or_else(|| paper.map(|paper| Smart::Custom(paper.height().into())))
+        ))?
     )]
     #[default(Smart::Custom(Paper::A4.height().into()))]
     #[ghost]

@@ -1,3 +1,5 @@
+// Modified by LDemetrios 
+
 use crate::foundations::{Content, elem};
 use crate::layout::{Length, Rel};
 
@@ -19,14 +21,14 @@ pub struct PadElem {
     /// The padding at the left side.
     #[parse(
         let all = args.named("rest")?.or(args.find()?);
-        let x = args.named("x")?.or(all);
+        let x = args.named("x")?.or(all.clone());
         let y = args.named("y")?.or(all);
-        args.named("left")?.or(x)
+        args.named("left")?.or(x.clone())
     )]
     pub left: Rel<Length>,
 
     /// The padding at the top side.
-    #[parse(args.named("top")?.or(y))]
+    #[parse(args.named("top")?.or(y.clone()))]
     pub top: Rel<Length>,
 
     /// The padding at the right side.

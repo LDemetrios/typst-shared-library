@@ -1,4 +1,10 @@
-Licenses for third party components used by this project can be found below.
+This repository is a fork of Typst (https://github.com/typst/typst).
+
+Fork author: Dmitry Roman "LDemetrios" Liapin
+Contact: ldemetrios@yandex.ru
+Website: (incubating) ldemetrios.org
+
+Licenses for third party components used by the upstream project, and, by extent, by this fork, can be found below.
 
 ================================================================================
 The MIT License applies to:

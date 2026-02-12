@@ -1,3 +1,5 @@
+// Modified by LDemetrios 
+
 use std::collections::BTreeSet;
 use std::fmt::{self, Debug, Display, Formatter};
 use std::sync::Arc;
@@ -48,11 +50,11 @@ use crate::foundations::{
 /// ```
 #[ty(scope, cast)]
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]
-pub struct Symbol(SymbolInner);
+pub struct Symbol(pub SymbolInner);
 
 /// The internal representation of a [`Symbol`].
 #[derive(Clone, Eq, PartialEq, Hash)]
-enum SymbolInner {
+pub enum SymbolInner {
     /// A native symbol that has no named variant.
     Single(&'static str),
     /// A native symbol with multiple named variants.
@@ -65,11 +67,11 @@ enum SymbolInner {
 /// applied. Also used for symbols defined at runtime by the user with no
 /// modifier applied.
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]
-struct Modified {
+pub struct Modified {
     /// The full list of variants.
-    list: List,
+    pub list: List,
     /// The modifiers that are already applied.
-    modifiers: ModifierSet<EcoString>,
+    pub modifiers: ModifierSet<EcoString>,
     /// Whether we already emitted a deprecation warning for the currently
     /// applied modifiers.
     deprecated: bool,
@@ -77,11 +79,11 @@ struct Modified {
 
 /// A symbol variant, consisting of a set of modifiers, the variant's value, and an
 /// optional deprecation message.
-type Variant<S> = (ModifierSet<S>, S, Option<S>);
+pub type Variant<S> = (ModifierSet<S>, S, Option<S>);
 
 /// A collection of symbols.
 #[derive(Clone, Eq, PartialEq, Hash)]
-enum List {
+pub enum List {
     Static(&'static [Variant<&'static str>]),
     Runtime(Box<[Variant<EcoString>]>),
 }

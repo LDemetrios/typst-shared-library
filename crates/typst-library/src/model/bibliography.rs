@@ -1,3 +1,5 @@
+// Modified by LDemetrios 
+
 use std::any::TypeId;
 use std::fmt::{self, Debug, Formatter};
 use std::num::NonZeroUsize;
@@ -127,10 +129,12 @@ pub struct BibliographyElem {
     ///   once with a short alias.
     /// - A path string or [`path`] to a [CSL file](https://citationstyles.org/).
     /// - Raw bytes from which a CSL style should be decoded.
-    #[parse(match args.named::<Spanned<CslSource>>("style")? {
-        Some(source) => Some(CslStyle::load(engine, source)?),
-        None => None,
-    })]
+    #[parse(args.named_derive_spanned::<CslSource, _>("style", |style| Ok(
+        match style {
+            Some(source) => Some(CslStyle::load(engine, source)?),
+            None => None,
+        }
+    ))?)]
     #[default({
         let default = ArchivedStyle::InstituteOfElectricalAndElectronicsEngineers;
         Derived::new(CslSource::Named(default, None), CslStyle::from_archived(default))
@@ -217,8 +221,8 @@ impl ShowSet for Packed<BibliographyElem> {
     fn show_set(&self, _: StyleChain) -> Styles {
         const INDENT: Em = Em::new(1.0);
         let mut out = Styles::new();
-        out.set(HeadingElem::numbering, None);
-        out.set(PadElem::left, INDENT.into());
+        out.set_internal(HeadingElem::numbering, None);
+        out.set_internal(PadElem::left, INDENT.into());
         out
     }
 }

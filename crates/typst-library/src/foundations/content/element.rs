@@ -1,3 +1,5 @@
+// Modified by LDemetrios 
+
 use std::any::TypeId;
 use std::cmp::Ordering;
 use std::fmt::{self, Debug};
@@ -18,7 +20,7 @@ use crate::text::{Lang, Region};
 
 /// A document element.
 #[derive(Copy, Clone, Eq, PartialEq, Hash)]
-pub struct Element(Static<ContentVtable>);
+pub struct Element(pub Static<ContentVtable>);
 
 impl Element {
     /// Get the element for `T`.

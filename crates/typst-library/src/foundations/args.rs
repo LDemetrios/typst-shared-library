@@ -1,3 +1,5 @@
+// Modified by LDemetrios
+
 use std::fmt::{self, Debug, Formatter};
 use std::ops::Add;
 use std::slice;
@@ -226,6 +228,35 @@ impl Args {
             }
         }
         Ok(found)
+    }
+
+    pub fn named_derive_spanned<T, D>(
+        &mut self,
+        name: &str,
+        mut body: impl FnMut(Option<Spanned<T>>) -> SourceResult<Option<D>>,
+    ) -> SourceResult<Option<crate::foundations::DerivedOtherWay<Option<Value>, D>>>
+    where
+        T: FromValue<Value>,
+    {
+        let origin_v: Option<Spanned<Value>> = self.named(name)?;
+        let value = match origin_v.clone() {
+            None => None,
+            Some(Spanned { v, span }) => {
+                Some(Spanned::new(T::from_value(v).at(span)?, span))
+            }
+        };
+        Ok(body(value)?.map(|it| crate::foundations::DerivedOtherWay::new(origin_v.map(|jt| jt.v), it)))
+    }
+
+    pub fn named_derive<T, D>(
+        &mut self,
+        name: &str,
+        mut body: impl FnMut(Option<T>) -> SourceResult<Option<D>>,
+    ) -> SourceResult<Option<crate::foundations::DerivedOtherWay<Option<Value>, D>>>
+    where
+        T: FromValue<Value>,
+    {
+        self.named_derive_spanned(name, |it| body(it.map(|it| it.v)))
     }
 
     /// Same as named, but with fallback to find.
