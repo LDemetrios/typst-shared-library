@@ -1,10 +1,30 @@
-This repository is a fork of Typst (https://github.com/typst/typst).
+The `typst-shared-library` project is a fork of Typst (https://github.com/typst/typst).
 
 Fork author: Dmitry Roman "LDemetrios" Liapin
 Contact: ldemetrios@yandex.ru
 Website: (incubating) ldemetrios.org
 
-Licenses for third party components used by the upstream project, and, by extent, by this fork, can be found below.
+========================================================================
+The original project is licensed under the Apache License, Version 2.0
+Copyright 2019-2023 Martin Haug, Laurenz Mädje and contributors; 2023–2026 Typst GmbH and contributors
+You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+========================================================================
+
+Compared to the upstream project, this one defines additional dependencies:
+========================================================================
+Typstyle (Apache License 2.0)
+Source: https://github.com/Enter-tainer/typstyle
+Copyright 2024-2026 Wenzhuo Liu (Enter-tainer) and contributors
+Licensed under the Apache License, Version 2.0 (the "License");
+You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+========================================================================
+
+
+Licenses for third party components used by the upstream project, and, by extent, by this fork, can be found below,
+in the original text of upstream NOTICE:
+
+
+Licenses for third party components used by this project can be found below.
 
 ================================================================================
 The MIT License applies to:
