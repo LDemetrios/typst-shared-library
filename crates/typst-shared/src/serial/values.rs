@@ -1020,7 +1020,7 @@ impl ToJson for Regex {
     fn to_json(&self) -> JsValue {
         json!({
             "type" : "regex",
-            "value" : { "type" : "str", "value" : self.pattern() },
+            "regex" : { "type" : "str", "value" : self.pattern() },
         })
     }
 }
