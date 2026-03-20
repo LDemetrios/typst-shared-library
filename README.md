@@ -10,6 +10,8 @@ unfortunately, for that some internal code still should've been altered:
 - Added `typst-shared` crate. It contains all the glue between Rust's side and any other side, most importantly, c-style
   `extern` functions for calling methods from the compiler (parse syntax, eval, compile, query), and from Typstyle (
   format source)
+- Added `jvm-object` type, dedicated to carrying host jvm objects in Typst code, and a `session` field to World to keep track of 
+  registrars of such objects.
 - Implemented `IntoValue` and `FromValue` for various types.
 - Added parallel serialization mechanism, supporting majority of values (without falling back to `repr`)
 - Modified values to better track how they were created from Typst:
