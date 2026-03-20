@@ -1,6 +1,6 @@
 // Added by LDemetrios
 
-use crate::export::raw_string::RawString;
+use typst_library::foundations::raw_string::RawString;
 use crate::export::raw_time::RawNow;
 use crate::export::utils::{evaluate, to_file_id};
 use crate::export::world_parts::TicketedReader;
@@ -19,6 +19,7 @@ use typst_library::diag::{Severity, SourceDiagnostic};
 
 #[unsafe(no_mangle)]
 pub extern "C" fn query(
+    session: i64,
     result: &mut RawString,
     context: &mut FilesCache<TicketedReader>,
     fonts: &mut FontCollection,
@@ -40,6 +41,7 @@ pub extern "C" fn query(
         Some(stdlib),
         Some(to_file_id(main)),
         now.resolve(),
+        session
     );
 
     let selector = selector.into_string().unwrap();

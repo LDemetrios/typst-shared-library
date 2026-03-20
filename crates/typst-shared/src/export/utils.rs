@@ -1,6 +1,6 @@
 // Added by LDemetrios
 
-use crate::export::raw_string::RawString;
+use typst_library::foundations::raw_string::RawString;
 use crate::serial::extended_info::ExtendedFileDescriptor;
 use typst::comemo;
 use typst::comemo::Track;

@@ -2,7 +2,7 @@
 
 use crate::compile::diagnostics_from_message;
 use crate::extended_info::ExtendedSourceDiagnostic;
-use crate::raw_string::RawString;
+use typst_library::foundations::raw_string::RawString;
 use serde::Deserialize;
 use std::num::NonZeroUsize;
 use typst_library::foundations::Smart;

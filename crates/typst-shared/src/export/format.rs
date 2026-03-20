@@ -1,6 +1,6 @@
 // Added by LDemetrios
 
-use crate::export::raw_string::RawString;
+use typst_library::foundations::raw_string::RawString;
 use typstyle_core::{Config, Typstyle};
 
 #[unsafe(no_mangle)]

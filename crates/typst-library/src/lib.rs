@@ -95,6 +95,8 @@ pub trait World: Send + Sync {
     /// If this function returns `None`, Typst's `datetime` function will
     /// return an error.
     fn today(&self, offset: Option<i64>) -> Option<Datetime>;
+
+    fn session(&self) -> i64;
 }
 
 macro_rules! world_impl {
@@ -126,6 +128,10 @@ macro_rules! world_impl {
 
             fn today(&self, offset: Option<i64>) -> Option<Datetime> {
                 self.deref().today(offset)
+            }
+
+            fn session(&self) -> i64 {
+                self.deref().session()
             }
         }
     };

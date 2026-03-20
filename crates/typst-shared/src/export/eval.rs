@@ -10,7 +10,7 @@ use typst::World;
 use typst_library::Library;
 use crate::compile::diagnostics_from_message;
 use crate::extended_info::{ExtendedSourceDiagnostic, ExtendedWarned, Resolve};
-use crate::raw_string::RawString;
+use typst_library::foundations::raw_string::RawString;
 use crate::raw_time::RawNow;
 use crate::utils::to_file_id;
 use crate::values::ToJson;
@@ -19,6 +19,7 @@ use crate::world_parts::TicketedReader;
 
 #[unsafe(no_mangle)]
 pub extern "C" fn eval_main(
+    session: i64,
     result: &mut RawString,
     context: &mut FilesCache<TicketedReader>,
     stdlib: &mut LazyHash<Library>,
@@ -36,6 +37,7 @@ pub extern "C" fn eval_main(
         Some(stdlib),
         Some(to_file_id(main)),
         now.resolve(),
+        session
     );
 
     let mut sink = Sink::new();

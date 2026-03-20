@@ -1,3 +1,5 @@
+// Modified by LDemetrios
+
 //! Foundational types and functions.
 
 pub mod calc;
@@ -37,6 +39,8 @@ mod target_;
 mod ty;
 mod value;
 mod version;
+mod jvmobj;
+pub mod raw_string;
 
 pub use self::args::*;
 pub use self::array::*;
@@ -67,6 +71,7 @@ pub use self::symbol::*;
 pub use self::target_::*;
 pub use self::ty::*;
 pub use self::value::*;
+pub use self::jvmobj::*;
 pub use self::version::*;
 pub use typst_macros::{scope, ty};
 
@@ -82,7 +87,7 @@ use comemo::{Track, TrackedMut};
 use ecow::EcoString;
 use typst_syntax::{RootedPath, Spanned, SyntaxMode};
 
-use crate::diag::{SourceResult, StrResult, bail};
+use crate::diag::{bail, SourceResult, StrResult};
 use crate::engine::Engine;
 use crate::introspection::Introspector;
 use crate::{Feature, Features};
@@ -111,6 +116,7 @@ pub(super) fn define(global: &mut Scope, inputs: Dict, features: &Features) {
     global.define_type::<Duration>();
     global.define_type::<Version>();
     global.define_type::<RootedPath>();
+    global.define_type::<JvmObject>();
     global.define_func::<repr::repr>();
     global.define_func::<panic>();
     global.define_func::<assert>();

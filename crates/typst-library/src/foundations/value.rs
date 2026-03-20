@@ -20,6 +20,7 @@ use crate::foundations::{
     NoneValue, Reflect, Repr, Resolve, Scope, Str, Styles, Symbol, SymbolElem, Type,
     Version, fields, ops, repr,
 };
+use crate::foundations::jvmobj::JvmObject;
 use crate::layout::{Abs, Angle, Em, Fr, Length, Ratio, Rel};
 use crate::text::{RawContent, RawElem, TextElem};
 use crate::visualize::{Color, Gradient, Tiling};
@@ -86,13 +87,15 @@ pub enum Value {
     Type(Type),
     /// A module.
     Module(Module),
+    /// A JVM object
+    JvmObject(JvmObject),
     /// A dynamic value.
     Dyn(Dynamic),
 }
 
 impl Value {
     /// Create a new dynamic value.
-    pub fn dynamic<T>(any: T) -> Self
+    pub fn dynamic<T>(any: T) -> Self   
     where
         T: Debug
             + Repr
@@ -155,6 +158,7 @@ impl Value {
             Self::Args(_) => Type::of::<Args>(),
             Self::Type(_) => Type::of::<Type>(),
             Self::Module(_) => Type::of::<Module>(),
+            Self::JvmObject(_) => Type::of::<JvmObject>(),
             Self::Dyn(v) => v.ty(),
         }
     }
@@ -260,6 +264,7 @@ impl Debug for Value {
             Self::Args(v) => Debug::fmt(v, f),
             Self::Type(v) => Debug::fmt(v, f),
             Self::Module(v) => Debug::fmt(v, f),
+            Self::JvmObject(v) => Debug::fmt(v, f),
             Self::Dyn(v) => Debug::fmt(v, f),
         }
     }
@@ -297,6 +302,7 @@ impl Repr for Value {
             Self::Args(v) => v.repr(),
             Self::Type(v) => v.repr(),
             Self::Module(v) => v.repr(),
+            Self::JvmObject(v) => v.repr(),
             Self::Dyn(v) => v.repr(),
         }
     }
@@ -347,6 +353,7 @@ impl Hash for Value {
             Self::Args(v) => v.hash(state),
             Self::Type(v) => v.hash(state),
             Self::Module(v) => v.hash(state),
+            Self::JvmObject(v) => v.hash(state),
             Self::Dyn(v) => v.hash(state),
         }
     }

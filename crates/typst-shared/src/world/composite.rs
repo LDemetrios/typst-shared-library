@@ -18,6 +18,7 @@ pub struct CompositeWorld<'a, Reader: ReadCallback + Clone + Copy+ Debug+'a> {
     library: Option<&'a LazyHash<Library>>,
     main: Option<FileId>,
     time: Option<TimeHolder>,
+    session: i64,
 }
 
 impl<'a, Reader: ReadCallback + Clone+ Copy+ Debug + 'a> CompositeWorld<'a, Reader> {
@@ -27,6 +28,7 @@ impl<'a, Reader: ReadCallback + Clone+ Copy+ Debug + 'a> CompositeWorld<'a, Read
         library: Option<&'a LazyHash<Library>>,
         main: Option<FileId>,
         time: Option<Now>,
+        session: i64,
     ) -> Self {
         Self {
             files,
@@ -34,6 +36,7 @@ impl<'a, Reader: ReadCallback + Clone+ Copy+ Debug + 'a> CompositeWorld<'a, Read
             library,
             main,
             time: time.map(TimeHolder::new),
+            session,
         }
     }
 }
@@ -68,5 +71,9 @@ impl<'a, Reader: ReadCallback + Clone + Copy + Debug + 'a + Send + Sync> World
 
     fn today(&self, offset: Option<i64>) -> Option<Datetime> {
         self.time.as_ref().and_then(|it| it.today(offset))
+    }
+
+    fn session(&self) -> i64 {
+        self.session
     }
 }

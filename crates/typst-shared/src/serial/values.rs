@@ -12,7 +12,7 @@ use std::sync::Arc;
 use typst::ecow::EcoString;
 use typst::syntax::{RootedPath, VirtualPath, VirtualRoot, ast};
 use typst::utils::{LazyHash, Numeric, Scalar, Static};
-use typst_library::foundations::List as SymList;
+use typst_library::foundations::{JvmObject, List as SymList};
 use typst_library::foundations::Variant as SymVariant;
 use typst_library::foundations::{
     Arg, Args, Array, Bytes, ClosureNode, Content, Datetime, Decimal, Derived, Dict,
@@ -35,7 +35,7 @@ pub trait ToJson {
 }
 
 fn float_json(value: f64) -> JsValue {
-    let value = if value.is_finite() {
+    let legacy_value = if value.is_finite() {
         json!(value)
     } else if value.is_nan() {
         json!("nan")
@@ -44,7 +44,11 @@ fn float_json(value: f64) -> JsValue {
     } else {
         json!("-inf")
     };
-    json!({ "type" : "float", "value" : value })
+    json!({
+        "type" : "float",
+        "value-bits" : value.to_bits().to_string(),
+        "value" : legacy_value,
+    })
 }
 
 macro_rules! auto_json {
@@ -96,6 +100,7 @@ impl ToJson for Value {
             Value::Args(x) => x.to_json(),
             Value::Type(x) => x.to_json(),
             Value::Module(x) => x.to_json(),
+            Value::JvmObject(x) => x.to_json(),
             Value::Dyn(x) => {
                 if let Some(it) = x.downcast::<Stroke>() {
                     it.to_json()
@@ -452,13 +457,18 @@ impl ToJson for Decimal {
 
 impl ToJson for Duration {
     fn to_json(&self) -> JsValue {
+        let weeks = self.weeks() as i64;
+        let days = self.days() as i64;
+        let hours = self.hours() as i64;
+        let minutes = self.minutes() as i64;
+        let seconds = self.seconds() as i64;
         json!({
             "type" : "duration",
-            "weeks" : self.weeks().to_json(),
-            "days" : self.days().to_json(),
-            "hours" : self.hours().to_json(),
-            "minutes" : self.minutes().to_json(),
-            "seconds" : self.seconds().to_json(),
+            "weeks" : weeks.to_json(),
+            "days" : days.to_json(),
+            "hours" : hours.to_json(),
+            "minutes" : minutes.to_json(),
+            "seconds" : seconds.to_json(),
         })
     }
 }
@@ -1078,6 +1088,16 @@ impl<T: ToJson> ToJson for Smart<T> {
 impl<T: ToJson> ToJson for LazyHash<T> {
     fn to_json(&self) -> JsValue {
         self.deref().to_json()
+    }
+}
+
+impl ToJson for JvmObject {
+    fn to_json(&self) -> JsValue {
+        json!({
+            "type" : "jvm_object",
+            "session" : self.session,
+            "id" : self.id,
+        })
     }
 }
 

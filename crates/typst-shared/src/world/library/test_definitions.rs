@@ -12,9 +12,6 @@ use typst::syntax::Span;
 use typst_library::Library;
 use typst_library::visualize::Color;
 
-// TODO These should be doubled by kotlin-based implementations.
-// For testing of custom kotlin functions.
-
 #[func]
 pub fn test(lhs: Value, rhs: Value) -> StrResult<NoneValue> {
     if lhs != rhs {

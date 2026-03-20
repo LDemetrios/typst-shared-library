@@ -43,6 +43,7 @@ typstyle-core = "=0.13.0"
 codespan-reporting = { workspace = true }
 codex = { workspace = true }
 base64 = { workspace = true }
+ecow = { workspace = true }
 rustc-hash = { workspace = true }
 tiny-skia = { workspace = true }
 

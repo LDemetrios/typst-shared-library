@@ -1,6 +1,6 @@
 // Added by LDemetrios
 
-use crate::export::raw_string::RawString;
+use typst_library::foundations::raw_string::RawString;
 use crate::flattened_tree;
 use std::marker::PhantomData;
 use std::mem;

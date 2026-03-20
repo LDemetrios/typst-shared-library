@@ -49,6 +49,7 @@ fn main() {
             VirtualPath::new("/main.typ").expect("invalid virtual path"),
         ))),
         Some(Now::System),
+        0
     );
 
     let result_v: ExtendedWarned<

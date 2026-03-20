@@ -13,7 +13,7 @@ use typst::utils::format_duration;
 use typst_kit::downloader::{Progress, ProgressReporter};
 use typst_kit::downloader::Downloader;
 
-use crate::export::raw_string::RawString;
+use typst_library::foundations::raw_string::RawString;
 use crate::raw_bytes::Base64Bytes;
 use crate::terminal::{self, TermOut};
 

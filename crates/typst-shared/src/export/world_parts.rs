@@ -1,20 +1,22 @@
 // Added by LDemetrios
 
 use crate::export::raw_bytes::Base64Bytes;
-use crate::export::raw_string::RawString;
 use crate::export::utils::{evaluate, to_file_id_or_none};
 use crate::serial::extended_info::{ExtendedFileDescriptor, ExtendedFileResult};
 use crate::serial::extended_info::{ExtendedSourceDiagnostic, ExtendedSpan, Resolve};
 use crate::world::composite::CompositeWorld;
 use crate::world::files::{FilesCache, ReadCallback};
 use crate::world::fonts::FontCollection;
+use crate::world::funcs::{HostNativeFuncData, HostNativeFuncDescriptor};
 use crate::world::library::{replace_inputs, stdlib};
 use crate::world::packages::PackageManager;
 use crate::world::register_test_definitions;
+use ecow::eco_vec;
 use typst::syntax::{FileId, Source, SyntaxMode};
 use typst::utils::{LazyHash, SmallBitSet};
 use typst_library::diag::{FileError, FileResult, Severity};
-use typst_library::foundations::{Bytes, Datetime, Value};
+use typst_library::foundations::raw_string::RawString;
+use typst_library::foundations::{Bytes, Datetime, Func, Style, Value};
 use typst_library::text::{Font, FontBook};
 use typst_library::{Library, World};
 
@@ -118,6 +120,27 @@ pub extern "C" fn font_collection(
 
 free_func!(free_font_collection, FontCollection);
 
+#[unsafe(no_mangle)]
+pub extern "C" fn create_native_func_data(
+    descriptor_len: u64,
+    descriptor_ptr: *mut u8,
+    ticket: i64,
+) -> *const HostNativeFuncData {
+    let descriptor = RawString::new(descriptor_len, descriptor_ptr)
+        .into_string()
+        .unwrap_or_default();
+    let parsed: HostNativeFuncDescriptor = match serde_json::from_str(&descriptor) {
+        Ok(value) => value,
+        Err(_) => return std::ptr::null(),
+    };
+    match HostNativeFuncData::new(ticket, parsed) {
+        Ok(value) => Box::into_raw(Box::new(value)),
+        Err(_) => std::ptr::null(),
+    }
+}
+
+free_func!(free_native_func_data, HostNativeFuncData);
+
 // library: &'static LazyHash<Library>
 
 #[unsafe(no_mangle)]
@@ -133,6 +156,7 @@ pub extern "C" fn library(features: i32) -> *mut LazyHash<Library> {
 
 #[unsafe(no_mangle)]
 pub extern "C" fn with_inputs(
+    session: i64,
     result: &mut RawString,
     fonts: *const FontCollection,
     library: &mut LazyHash<Library>,
@@ -148,7 +172,7 @@ pub extern "C" fn with_inputs(
         library.clone()
     };
     let stub: CompositeWorld<TicketedReader> =
-        CompositeWorld::new(None, const_ref(fonts), Some(&library), None, None);
+        CompositeWorld::new(None, const_ref(fonts), Some(&library), None, None, session);
     let result_v: Result<i64, Vec<ExtendedSourceDiagnostic>> =
         match evaluate(&stub, inputs.as_str(), SyntaxMode::Code) {
             Err(err) => Err(err.resolve(&stub)),
@@ -179,6 +203,7 @@ pub extern "C" fn ext_with_test_definitions(
 
 #[unsafe(no_mangle)]
 pub extern "C" fn with_styles(
+    session: i64,
     result: &mut RawString,
     fonts: *const FontCollection,
     library: &mut LazyHash<Library>,
@@ -195,29 +220,86 @@ pub extern "C" fn with_styles(
         library.clone()
     };
     let stub: CompositeWorld<TicketedReader> =
-        CompositeWorld::new(None, const_ref(fonts), Some(&library), None, None);
+        CompositeWorld::new(None, const_ref(fonts), Some(&library), None, None, session);
     let result_v: Result<i64, Vec<ExtendedSourceDiagnostic>> =
         match evaluate(&stub, styles.as_str(), SyntaxMode::Code) {
             Err(err) => Err(err.resolve(&stub)),
             Ok(Value::Content(val)) => {
-                if let Ok(Value::Styles(styles)) = val.field_by_name("styles") {
-                    let library_inner = library.into_inner();
-                    let new_styles = if append != 0 {
-                        styles
-                            .into_iter()
-                            .chain(library_inner.styles.into_iter())
-                            .collect::<typst_library::foundations::Styles>()
+                let style_list =
+                    if let Ok(Value::Styles(styles)) = val.field_by_name("styles") {
+                        styles.into_iter()
                     } else {
-                        styles
+                        eco_vec![].into_iter()
                     };
-                    let new_lib = Library { styles: new_styles, ..library_inner };
-
-                    Ok(Box::into_raw(Box::new(LazyHash::new(new_lib))) as _)
+                let library_inner = library.into_inner();
+                let new_styles = if append != 0 {
+                    style_list
+                        .into_iter()
+                        .chain(library_inner.styles.into_iter())
+                        .collect::<typst_library::foundations::Styles>()
                 } else {
-                    detached_diagnostic("Evaluated `styles` is not a styled")
-                }
+                    style_list.collect::<typst_library::foundations::Styles>()
+                };
+                let new_lib = Library { styles: new_styles, ..library_inner };
+
+                Ok(Box::into_raw(Box::new(LazyHash::new(new_lib))) as _)
             }
             _ => detached_diagnostic("Evaluated `styles` is not a content"),
+        };
+    RawString::write_from(result, &result_v);
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn register_native_func(
+    library: &mut LazyHash<Library>,
+    native_func: &HostNativeFuncData,
+    name_len: u64,
+    name_ptr: *mut u8,
+    close_previous: i32,
+) -> i64 {
+    let mut library = if close_previous != 0 {
+        *unsafe { Box::from_raw(library) }
+    } else {
+        library.clone()
+    }
+    .into_inner();
+    let key = RawString::new(name_len, name_ptr).into_string().unwrap_or_default();
+    let key = native_func.register_name(key);
+    library.global.scope_mut().define(key, Func::from(native_func.data.0));
+    Box::into_raw(Box::new(LazyHash::new(library))) as *const LazyHash<Library> as i64
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn register_value(
+    session: i64,
+    result: &mut RawString,
+    fonts: *const FontCollection,
+    library: &mut LazyHash<Library>,
+    name_len: u64,
+    name_ptr: *mut u8,
+    value_len: u64,
+    value_ptr: *mut u8,
+    close_previous: i32,
+) {
+    let mut library = if close_previous != 0 {
+        *unsafe { Box::from_raw(library) }
+    } else {
+        library.clone()
+    };
+    let name = RawString::new(name_len, name_ptr).into_string().unwrap_or_default();
+    let value_src =
+        RawString::new(value_len, value_ptr).into_string().unwrap_or_default();
+    let stub: CompositeWorld<TicketedReader> =
+        CompositeWorld::new(None, const_ref(fonts), Some(&library), None, None, session);
+    let result_v: Result<i64, Vec<ExtendedSourceDiagnostic>> =
+        match evaluate(&stub, value_src.as_str(), SyntaxMode::Code) {
+            Err(err) => Err(err.resolve(&stub)),
+            Ok(value) => {
+                let mut library_inner = library.into_inner();
+                let key: &'static str = Box::leak(name.into_boxed_str());
+                library_inner.global.scope_mut().define(key, value);
+                Ok(Box::into_raw(Box::new(LazyHash::new(library_inner))) as _)
+            }
         };
     RawString::write_from(result, &result_v);
 }
@@ -288,5 +370,9 @@ impl World for NoopWorld {
 
     fn today(&self, offset: Option<i64>) -> Option<Datetime> {
         None
+    }
+
+    fn session(&self) -> i64 {
+        0
     }
 }

@@ -2,7 +2,7 @@
 
 use std::mem;
 use crate::export::raw_bytes::Base64Bytes;
-use crate::export::raw_string::RawString;
+use typst_library::foundations::raw_string::RawString;
 use crate::export::raw_time::RawNow;
 use crate::export::utils::to_file_id;
 use crate::export::world_parts::TicketedReader;
@@ -27,6 +27,7 @@ use crate::free_func;
 use crate::world_parts::NoopWorld;
 
 fn build_world<'a>(
+    session: i64,
     context: &'a mut FilesCache<TicketedReader>,
     fonts: &'a mut FontCollection,
     stdlib: &'a mut LazyHash<Library>,
@@ -43,6 +44,7 @@ fn build_world<'a>(
         Some(stdlib),
         Some(to_file_id(main)),
         now.resolve(),
+        session
     )
 }
 
@@ -113,6 +115,7 @@ fn to_sk_transform(transform: &Transform) -> sk::Transform {
 
 #[unsafe(no_mangle)]
 pub extern "C" fn precompile_paged(
+    session: i64,
     result: &mut RawString,
     context: &mut FilesCache<TicketedReader>,
     fonts: &mut FontCollection,
@@ -123,6 +126,7 @@ pub extern "C" fn precompile_paged(
     now_nanos: i32,
 ) {
     let world = build_world(
+        session,
         context,
         fonts,
         stdlib,
@@ -141,6 +145,7 @@ pub extern "C" fn precompile_paged(
 
 #[unsafe(no_mangle)]
 pub extern "C" fn compile_html(
+    session: i64,
     result: &mut RawString,
     context: &mut FilesCache<TicketedReader>,
     fonts: &mut FontCollection,
@@ -151,6 +156,7 @@ pub extern "C" fn compile_html(
     now_nanos: i32,
 ) {
     let world = build_world(
+        session,
         context,
         fonts,
         stdlib,
@@ -174,6 +180,7 @@ pub extern "C" fn compile_html(
 
 #[unsafe(no_mangle)]
 pub extern "C" fn compile_svg(
+    session: i64,
     result: &mut RawString,
     context: &mut FilesCache<TicketedReader>,
     fonts: &mut FontCollection,
@@ -186,6 +193,7 @@ pub extern "C" fn compile_svg(
     to: i32,
 ) {
     let world = build_world(
+        session,
         context,
         fonts,
         stdlib,
@@ -225,6 +233,7 @@ pub extern "C" fn render_svg(
 
 #[unsafe(no_mangle)]
 pub extern "C" fn compile_png(
+    session: i64,
     result: &mut RawString,
     context: &mut FilesCache<TicketedReader>,
     fonts: &mut FontCollection,
@@ -238,6 +247,7 @@ pub extern "C" fn compile_png(
     ppi: f64,
 ) {
     let world = build_world(
+        session,
         context,
         fonts,
         stdlib,
@@ -286,6 +296,7 @@ pub extern "C" fn render_png(
 
 #[unsafe(no_mangle)]
 pub extern "C" fn compile_png_merged_with_links(
+    session: i64,
     result: &mut RawString,
     context: &mut FilesCache<TicketedReader>,
     fonts: &mut FontCollection,
@@ -297,6 +308,7 @@ pub extern "C" fn compile_png_merged_with_links(
     ppi: f64,
 ) {
     let world = build_world(
+        session,
         context,
         fonts,
         stdlib,
@@ -323,6 +335,7 @@ pub extern "C" fn compile_png_merged_with_links(
 
 #[unsafe(no_mangle)]
 pub extern "C" fn compile_pdf(
+    session: i64,
     result: &mut RawString,
     context: &mut FilesCache<TicketedReader>,
     fonts: &mut FontCollection,
@@ -335,6 +348,7 @@ pub extern "C" fn compile_pdf(
     options_ptr: *mut u8,
 ) {
     let world = build_world(
+        session,
         context,
         fonts,
         stdlib,
@@ -370,6 +384,7 @@ pub extern "C" fn compile_pdf(
 
 #[unsafe(no_mangle)]
 pub extern "C" fn render_pdf(
+    session: i64,
     result: &mut RawString,
     document: *mut PagedDocument,
     context: &mut FilesCache<TicketedReader>,
@@ -389,7 +404,7 @@ pub extern "C" fn render_pdf(
     };
 
     let world = CompositeWorld::new(
-        Some(context), None, None, None, None,
+        Some(context), None, None, None, None, session
     );
 
     let pdf = typst_pdf::pdf(&doc, &options)

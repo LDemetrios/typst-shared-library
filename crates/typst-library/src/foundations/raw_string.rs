@@ -9,7 +9,7 @@ use std::str;
 
 #[repr(C)]
 #[derive(Copy, Clone, Debug)]
-pub(crate) struct RawString {
+pub struct RawString {
     pub len: u64,
     pub ptr: u64,
 }
