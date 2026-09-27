@@ -74,11 +74,11 @@ impl Eval for ast::FuncCall<'_> {
             )
         };
 
-        // Stacker is broken on WASM.
-        #[cfg(target_arch = "wasm32")]
+        // Stacker is unavailable on WASM and unnecessary on JVM.
+        #[cfg(any(target_arch = "wasm32", target_os = "jvm"))]
         return f();
 
-        #[cfg(not(target_arch = "wasm32"))]
+        #[cfg(not(any(target_arch = "wasm32", target_os = "jvm")))]
         stacker::maybe_grow(32 * 1024, 2 * 1024 * 1024, f)
     }
 }

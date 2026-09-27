@@ -19,7 +19,6 @@ typst-syntax = { workspace = true }
 typst-timing = { workspace = true }
 typst-utils = { workspace = true }
 codespan-reporting = { workspace = true, optional = true }
-dirs = { workspace = true, optional = true }
 ecow = { workspace = true }
 env_proxy = { workspace = true, optional = true }
 fastrand = { workspace = true, optional = true }
@@ -41,6 +40,9 @@ ureq = { workspace = true, optional = true }
 # `openssl/vendored` feature to it if `vendor-openssl` is enabled.
 [target.'cfg(not(any(target_os = "windows", target_os = "macos", target_os = "ios", target_os = "watchos", target_os = "tvos")))'.dependencies]
 openssl = { workspace = true, optional = true }
+
+[target.'cfg(not(target_os = "jvm"))'.dependencies]
+dirs = { workspace = true, optional = true }
 
 [features]
 default = []

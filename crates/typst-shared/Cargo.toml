@@ -53,7 +53,6 @@ default = [
     "embedded-fonts",
     "system-packages",
     "universe-packages",
-    "system-downloader",
 ]
 vendor-openssl = ["typst-kit/vendor-openssl"]
 embedded-fonts = ["typst-kit/embedded-fonts"]

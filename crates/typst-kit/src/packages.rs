@@ -226,9 +226,14 @@ impl FsPackages {
     /// - `$XDG_DATA_HOME/typst/packages` or `~/.local/share/typst/packages` on Linux
     /// - `~/Library/Application Support/typst/packages` on macOS
     /// - `%APPDATA%/typst/packages` on Windows
-    #[cfg(feature = "system-packages")]
+    #[cfg(all(feature = "system-packages", not(target_os = "jvm")))]
     pub fn system_data() -> Option<FsPackages> {
         dirs::data_dir().map(|dir| FsPackages::new(dir.join("typst/packages")))
+    }
+
+    #[cfg(all(feature = "system-packages", target_os = "jvm"))]
+    pub fn system_data() -> Option<FsPackages> {
+        None
     }
 
     /// Tries to provide a handle to the environment-defined standard system
@@ -238,9 +243,14 @@ impl FsPackages {
     /// - `$XDG_CACHE_HOME/typst/packages` or `~/.cache/typst/packages` on Linux
     /// - `~/Library/Caches/typst/packages` on macOS
     /// - `%LOCALAPPDATA%/typst/packages` on Windows
-    #[cfg(feature = "system-packages")]
+    #[cfg(all(feature = "system-packages", not(target_os = "jvm")))]
     pub fn system_cache() -> Option<FsPackages> {
         dirs::cache_dir().map(|dir| FsPackages::new(dir.join("typst/packages")))
+    }
+
+    #[cfg(all(feature = "system-packages", target_os = "jvm"))]
+    pub fn system_cache() -> Option<FsPackages> {
+        None
     }
 
     /// Returns the path from which this serves packages.
